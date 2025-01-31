@@ -13,7 +13,7 @@ const AdminPage: NextPage = () => {
     e.preventDefault();
 
     if (username === "admin" && password === "p") {
-      redirect("/login");
+      redirect("/admin/service/create");
     } else {
       setError("Invalid username or password");
     }

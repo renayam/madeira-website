@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Footer from "@/components/footer";
 import Header from "@/components/header";
+import { ServiceProvider } from "@/components/ServiceContext";
 
 export const metadata: Metadata = {
   title: "Madeira.€co",
@@ -18,7 +19,9 @@ export default function RootLayout({
     <html lang="fr">
       <body className="flex min-h-screen flex-col bg-primary text-white">
         <Header />
-        <main className="min-h-[90vh] flex-grow overflow-auto">{children}</main>
+        <main className="min-h-[90vh] flex-grow overflow-auto">
+          <ServiceProvider>{children}</ServiceProvider>
+        </main>
         <Footer />
       </body>
     </html>

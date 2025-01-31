@@ -1,9 +1,13 @@
 import React from "react";
+import { ServiceProvider } from "@/components/ServiceContext"; // Adjust the import path as necessary
+import ServiceList from "@/components/ServiceList"; // Adjust the import path as necessary
 
 export default function Service() {
   return (
-    <div className="flex flex-col items-center justify-center bg-primary">
-      <h1>service</h1>
-    </div>
+    <ServiceProvider>
+      <div className="flex flex-col items-center justify-center bg-primary p-6">
+        <ServiceList />
+      </div>
+    </ServiceProvider>
   );
 }
