@@ -6,12 +6,30 @@ import React, { useState } from "react";
 import ServiceList from "@/components/ServiceList";
 import useImageExpand from "@/hook/useImageExpand";
 
+type Data = {
+  serviceName: string;
+  bannerImage: string | null;
+  otherImages: string[];
+  description: string;
+};
+
+function NewEmptyData() {
+  return {
+    serviceName: "",
+    bannerImage: null,
+    otherImages: [], // Explicitly set to an empty array
+    description: "",
+  };
+}
+
 const CreateService: React.FC = () => {
   const { addService } = useServiceContext();
-  const [serviceName, setServiceName] = useState<string>("");
-  const [bannerImage, setBannerImage] = useState<string | null>(null); // Single banner image
-  const [otherImages, setOtherImages] = useState<string[]>([]); // Array for multiple other images
-  const [description, setDescription] = useState<string>("");
+  const [data, setData] = useState<Data>({
+    serviceName: "",
+    bannerImage: null,
+    otherImages: [],
+    description: "",
+  });
 
   // Use the custom hook
   const { expandedImage, openImage, closeImage } = useImageExpand();
@@ -19,37 +37,72 @@ const CreateService: React.FC = () => {
   const handleBannerImageChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    if (event.target.files && event.target.files[0]) {
-      setBannerImage(URL.createObjectURL(event.target.files[0])); // Set single banner image
+    const files = event.target.files;
+    if (!files || files.length === 0) {
+      return;
     }
+    const f = files[0];
+    setData((prevData) => ({
+      ...prevData,
+      bannerImage: URL.createObjectURL(f),
+    }));
   };
 
   const handleOtherImageChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    if (event.target.files) {
-      const newImages = Array.from(event.target.files).map((file) =>
-        URL.createObjectURL(file),
-      );
-      setOtherImages((prev) => [...prev, ...newImages]); // Append new images to the array
+    const files = event.target.files;
+    if (!files || files.length === 0) {
+      return;
     }
+    const newImages = Array.from(files).map((file) =>
+      URL.createObjectURL(file),
+    );
+    setData((prevData) => ({
+      ...prevData,
+      otherImages: [...prevData.otherImages, ...newImages],
+    }));
+  };
+
+  const handleDeleteImage = (index: number) => {
+    setData((prevData) => ({
+      ...prevData,
+      otherImages: prevData.otherImages.filter((_, i) => i !== index), // Remove the image at the specified index
+    }));
+  };
+
+  const handleDeleteBannerImage = () => {
+    setData((prevData) => ({
+      ...prevData,
+      bannerImage: null, // Clear the banner image
+    }));
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const newService = {
-      id: Date.now(), // Simple unique ID based on timestamp
-      name: serviceName,
-      bannerImage, // Store single banner image
-      otherImage: otherImages, // Store array of other images
-      description,
-    } as Service;
+
+    // Check if banner image is present
+    if (!data.bannerImage) {
+      alert("Une image de bannière est requise pour créer un service.");
+      return;
+    }
+
+    // Check if other images are present
+    if (data.otherImages.length === 0) {
+      alert("Au moins une autre image est requise pour créer un service.");
+      return;
+    }
+
+    const newService: Service = {
+      id: Date.now(),
+      name: data.serviceName,
+      bannerImage: data.bannerImage,
+      otherImage: data.otherImages,
+      description: data.description,
+    };
     addService(newService);
     // Reset form fields
-    setServiceName("");
-    setBannerImage(null);
-    setOtherImages([]);
-    setDescription("");
+    setData(NewEmptyData());
   };
 
   return (
@@ -62,8 +115,13 @@ const CreateService: React.FC = () => {
               Nom du Service :
               <input
                 type="text"
-                value={serviceName}
-                onChange={(e) => setServiceName(e.target.value)}
+                value={data.serviceName}
+                onChange={(e) =>
+                  setData((prevData) => ({
+                    ...prevData,
+                    serviceName: e.target.value,
+                  }))
+                }
                 required
                 className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -80,14 +138,23 @@ const CreateService: React.FC = () => {
                 className="mt-1 block w-full cursor-pointer rounded-md border border-gray-300 text-sm text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </label>
-            {bannerImage && (
-              <Image
-                src={bannerImage}
-                alt="Aperçu de la Bannière"
-                width={600} // Set your desired width
-                height={400} // Set your desired height
-                className="mt-2 h-auto w-full rounded-md shadow-sm"
-              />
+            {data.bannerImage && (
+              <div className="relative mt-2">
+                <Image
+                  src={data.bannerImage}
+                  alt="Aperçu de la Bannière"
+                  width={600} // Set your desired width
+                  height={400} // Set your desired height
+                  className="h-auto w-full rounded-md shadow-sm"
+                />
+                <button
+                  type="button"
+                  onClick={handleDeleteBannerImage}
+                  className="absolute right-0 top-0 mr-2 mt-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                >
+                  X
+                </button>
+              </div>
             )}
           </div>
           <div className="mb-4">
@@ -103,7 +170,7 @@ const CreateService: React.FC = () => {
             </label>
             <div className="mt-2 flex flex-wrap gap-2">
               <h3 className="underline">Autres Images:</h3>
-              {otherImages.map((image, index) => (
+              {data.otherImages.map((image, index) => (
                 <div key={index} className="relative h-24 w-24">
                   <Image
                     src={image}
@@ -113,6 +180,13 @@ const CreateService: React.FC = () => {
                     className="cursor-pointer rounded-md"
                     onClick={() => openImage(image)} // Use the hook to open the image
                   />
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteImage(index)} // Delete the specific image
+                    className="absolute right-0 top-0 mr-1 mt-1 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                  >
+                    X
+                  </button>
                 </div>
               ))}
             </div>
@@ -121,8 +195,13 @@ const CreateService: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700">
               Description :
               <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                value={data.description}
+                onChange={(e) =>
+                  setData((prevData) => ({
+                    ...prevData,
+                    description: e.target.value,
+                  }))
+                }
                 required
                 className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />

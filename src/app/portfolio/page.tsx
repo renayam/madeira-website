@@ -1,41 +1,12 @@
+"use client";
 import React from "react";
 import Image from "next/image";
+import useImageExpand from "@/hook/useImageExpand";
+import { useServiceContext } from "@/components/ServiceContext";
 
-export default function Portfolio() {
-  const portfolioItems = [
-    {
-      title: "Moderne",
-      description: "Une salle de bain au design contemporain et épuré.",
-      mainImage: "/images/20241121_150006.jpg",
-      gallery: [
-        "/images/20241121_150012.jpg",
-        "/images/20241121_150017.jpg",
-        "/images/20241121_150028.jpg",
-        "/images/20241121_150043.jpg",
-      ],
-      altText: "Salle de bain rénovée par Madeira.€co à Ballancourt",
-    },
-    {
-      title: "Classique",
-      description: "Un style intemporel pour une salle de bain chaleureuse.",
-      mainImage: "/images/20231010_140727.jpg",
-      gallery: [
-        "/images/20231010_140738.jpg",
-        "/images/20231010_140754.jpg",
-        "/images/20231010_140807.jpg",
-        "/images/20231010_140833.jpg",
-      ],
-      altText: "Salle de bain classique rénovée par Madeira.€co à Ballancourt",
-    },
-    {
-      title: "Minimaliste",
-      description: "Un espace fonctionnel avec des lignes épurées.",
-      mainImage: "/images/20231204_143732.jpg",
-      gallery: ["/images/20231204_143745.jpg", "/images/20231204_143759.jpg"],
-      altText:
-        "Salle de bain minimaliste rénovée par Madeira.€co à Ballancourt",
-    },
-  ];
+const ServiceList: React.FC = () => {
+  const { services } = useServiceContext(); // Fetch services from context
+  const { expandedImage, openImage, closeImage } = useImageExpand();
 
   return (
     <div className="flex flex-col items-center justify-center bg-primary p-4">
@@ -44,46 +15,64 @@ export default function Portfolio() {
         bains en espaces uniques.
       </p>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {portfolioItems.map((item, index) => (
+        {services.map((service) => (
           <div
-            key={index}
+            key={service.id}
             className="portfolio-item rounded-lg bg-white shadow-md"
           >
             <Image
-              src={item.mainImage}
-              alt={item.altText}
+              src={service.bannerImage as string} // Assuming bannerImage is the main image
+              alt={"Image de service"} // Provide a fallback alt text
               width={600} // Adjust width as needed
               height={400} // Adjust height as needed
-              className="rounded-t-lg"
+              className="cursor-pointer rounded-t-lg"
+              onClick={() => openImage(service.bannerImage as string)} // Open main image in modal
             />
             <div className="p-4">
-              <h3 className="text-xl font-semibold">{item.title}</h3>
-              <p className="text-gray-700">{item.description}</p>
+              <h3 className="text-xl font-semibold">{service.name}</h3>
+              <p className="text-gray-700">{service.description}</p>
               {/* Gallery Section */}
-              <div className="gallery hidden" id={item.title.toLowerCase()}>
-                {item.gallery.map((galleryImage, idx) => (
-                  <Image
-                    key={idx}
-                    src={galleryImage}
-                    alt={`${item.title} image ${idx + 1}`}
-                    width={300} // Adjust width as needed
-                    height={200} // Adjust height as needed
-                    className="mt-2 rounded"
-                  />
-                ))}
-              </div>
+              {service.otherImage && service.otherImage.length > 0 && (
+                <div className="gallery mt-2 flex flex-wrap gap-2">
+                  {service.otherImage.map((galleryImage, idx) => (
+                    <div
+                      key={idx}
+                      className="relative h-24 w-24 cursor-pointer"
+                      onClick={() => openImage(galleryImage)} // Open gallery image in modal
+                    >
+                      <Image
+                        src={galleryImage}
+                        alt={`${service.name} image ${idx + 1}`}
+                        layout="fill"
+                        objectFit="cover"
+                        className="rounded"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         ))}
       </div>
-      <div className="more-projects mt-6">
-        <a
-          href="realization.html"
-          className="btn rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
+
+      {/* Expanded Image Modal */}
+      {expandedImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+          onClick={closeImage}
         >
-          Venez découvrir toutes nos réalisations
-        </a>
-      </div>
+          <Image
+            src={expandedImage}
+            alt="Image Agrandie"
+            width={800}
+            height={600}
+            className="h-auto max-h-full w-auto max-w-full"
+          />
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default ServiceList;
