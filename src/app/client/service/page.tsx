@@ -1,76 +1,75 @@
 "use client";
-import React from "react";
 import Image from "next/image";
-import useImageExpand from "@/hook/useImageExpand";
-import { useServiceContext } from "@/components/ServiceContext";
+import React from "react";
 
 const ServiceList: React.FC = () => {
-  const { services } = useServiceContext(); // Fetch services from context
-  const { expandedImage, openImage, closeImage } = useImageExpand();
+  const steps = [
+    {
+      title: "Étape 1 : Définir votre projet",
+      description: [
+        "Définir ensemble votre projet et vos besoins.",
+        "Effectuer une visite de vos travaux afin de déterminer la faisabilité de votre projet.",
+      ],
+      image: "/images/service1.jpg", // Exemple d'image
+    },
+    {
+      title: "Étape 2 : Sélection des produits",
+      description: [
+        "Nous vous accompagnons sur le choix de vos produits, avec nos partenaires.",
+        "Établir une proposition chiffrée (fourniture et pose).",
+      ],
+      image: "/images/service2.jpg", // Exemple d'image
+    },
+    {
+      title: "Étape 3 : Réalisation des travaux",
+      description: [
+        "Effectuer les travaux de votre chantier du début à la fin.",
+      ],
+      image: "/images/service3.jpg", // Exemple d'image
+    },
+  ];
 
   return (
-    <div className="flex flex-col items-center justify-center bg-primary p-4">
-      <p className="mb-6 text-center text-lg text-white">
-        Découvrez nos réalisations sur mesure pour transformer vos salles de
-        bains en espaces uniques.
-      </p>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {services.map((service) => (
+    <div className="container mx-auto bg-primary px-4 py-8">
+      <h2 className="mb-6 text-center text-3xl font-bold text-white">
+        Notre Processus de Travail
+      </h2>
+
+      <div className="relative py-8">
+        {steps.map((step, index) => (
           <div
-            key={service.id}
-            className="portfolio-item rounded-lg bg-white shadow-md"
+            key={index}
+            className={`mb-8 flex flex-col items-center md:flex-row ${
+              index % 2 === 0 ? "md:flex-row-reverse" : ""
+            }`}
           >
-            <Image
-              src={service.bannerImage as string} // Assuming bannerImage is the main image
-              alt={"Image de service"} // Provide a fallback alt text
-              width={600} // Adjust width as needed
-              height={400} // Adjust height as needed
-              className="cursor-pointer rounded-t-lg"
-              onClick={() => openImage(service.bannerImage as string)} // Open main image in modal
-            />
-            <div className="p-4">
-              <h3 className="text-xl font-semibold">{service.name}</h3>
-              <p className="text-gray-700">{service.description}</p>
-              {/* Gallery Section */}
-              {service.otherImage && service.otherImage.length > 0 && (
-                <div className="gallery mt-2 flex flex-wrap gap-2">
-                  {service.otherImage.map((galleryImage, idx) => (
-                    <div
-                      key={idx}
-                      className="relative h-24 w-24 cursor-pointer"
-                      onClick={() => openImage(galleryImage)} // Open gallery image in modal
-                    >
-                      <Image
-                        src={galleryImage}
-                        alt={`${service.name} image ${idx + 1}`}
-                        layout="fill"
-                        objectFit="cover"
-                        className="rounded"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div className="w-full p-4 md:w-1/3">
+              <Image
+                src={step.image}
+                alt={`Illustration de ${step.title}`}
+                width={200}
+                height={200}
+                className="aspect-square rounded-lg object-cover shadow-md"
+              />
+            </div>
+
+            <div
+              className={`w-full rounded-lg bg-white p-6 shadow-md md:w-1/2 ${
+                index % 2 === 0 ? "text-right md:mr-4" : "text-left md:ml-4"
+              }`}
+            >
+              <h3 className="mb-4 text-xl font-semibold text-primary">
+                {step.title}
+              </h3>
+              {step.description.map((desc, descIndex) => (
+                <p key={descIndex} className="mb-2 text-gray-700">
+                  {desc}
+                </p>
+              ))}
             </div>
           </div>
         ))}
       </div>
-
-      {/* Expanded Image Modal */}
-      {expandedImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
-          onClick={closeImage}
-        >
-          <Image
-            src={expandedImage}
-            alt="Image Agrandie"
-            width={800}
-            height={600}
-            className="h-auto max-h-full w-auto max-w-full"
-          />
-        </div>
-      )}
     </div>
   );
 };

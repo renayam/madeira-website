@@ -1,5 +1,4 @@
 "use client";
-
 import React from "react";
 import Image from "next/image";
 import { usePrestationContext } from "@/components/PrestationContext";
@@ -35,17 +34,12 @@ const PrestationList: React.FC = () => {
                 />
               </div>
 
-              {/* Prestation Details */}
               <div className="p-4">
                 <h3 className="mb-2 text-xl font-semibold">
                   {prestation.name}
                 </h3>
                 <p className="mb-2 text-gray-600">{prestation.description}</p>
-                <p className="text-lg font-bold text-blue-600">
-                  {prestation.price.toFixed(2)} €
-                </p>
 
-                {/* Other Images */}
                 <div className="mt-4 flex flex-wrap gap-2">
                   {prestation.otherImage.map((image, index) => (
                     <div key={index} className="relative h-16 w-16">
@@ -66,7 +60,6 @@ const PrestationList: React.FC = () => {
         </div>
       )}
 
-      {/* Expanded Image Modal */}
       {expandedImage && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"

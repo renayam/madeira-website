@@ -75,14 +75,14 @@ export default function Contact() {
 
   return (
     <div className="flex flex-col items-center justify-center bg-primary p-4">
-      <h1 className="mb-4 text-3xl font-bold">Contact Us</h1>
+      <h1 className="mb-4 text-3xl font-bold">Nous Contacter</h1>
       <form onSubmit={handleSubmit} className="w-full max-w-md">
         <div className="mb-4">
           <label
             htmlFor="name"
             className="mb-2 block text-sm font-bold text-white"
           >
-            Name
+            Nom
           </label>
           <input
             type="text"
@@ -139,12 +139,13 @@ export default function Contact() {
           )}
         </div>
 
-        <div className="flex items-center justify-between">
+        {/* Center the button */}
+        <div className="flex justify-center">
           <button
             type="submit"
             className="focus:shadow-outline rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700 focus:outline-none"
           >
-            Send
+            Envoyer
           </button>
         </div>
       </form>

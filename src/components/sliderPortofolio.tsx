@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React from "react";
 import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
@@ -8,26 +8,20 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { usePortfolio } from "@/components/PortfolioContext";
-import { redirect } from "next/navigation";
+import { usePortfolio } from "./PortfolioContext";
 
-export default function Home() {
+export default function SliderPortofolio() {
   const { portfolioItems } = usePortfolio();
 
-  useEffect(() => {
-    redirect("/client/portfolio");
-  }, []);
-
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-primary">
-      <div className="w-full max-w-6xl px-4 py-8">
+    <div className="flex flex-col items-center justify-center gap-10 bg-primary p-5">
+      <div className="w-full max-w-6xl">
         <Swiper
           loop
           modules={[Navigation, Pagination, Autoplay]}
           spaceBetween={30}
           slidesPerView={1}
           navigation
-          // pagination={{ clickable: true }}
           autoplay={{
             delay: 4000,
             disableOnInteraction: false,
@@ -55,7 +49,7 @@ export default function Home() {
         </Swiper>
       </div>
 
-      <div className="mt-8 flex justify-center">
+      <div className="flex justify-center">
         <motion.div
           whileHover={{
             scale: 1.05,
@@ -64,7 +58,7 @@ export default function Home() {
           whileTap={{ scale: 0.95 }}
         >
           <Link
-            href="/client/portfolio"
+            href="/client/service"
             className="rounded-full bg-blue-600 px-6 py-3 text-white shadow-lg transition-colors duration-300 hover:bg-blue-700"
           >
             Découvrir nos services

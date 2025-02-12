@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { ServiceProvider } from "@/components/ServiceContext";
 import { PrestationProvider } from "@/components/PrestationContext";
 import { PortfolioProvider } from "@/components/PortfolioContext";
 
@@ -22,11 +21,9 @@ export default function RootLayout({
       </head>
       <body className="flex min-h-screen flex-col bg-primary text-white">
         <main className="min-h-[90vh] flex-grow overflow-auto">
-          <ServiceProvider>
-            <PortfolioProvider>
-              <PrestationProvider>{children}</PrestationProvider>
-            </PortfolioProvider>
-          </ServiceProvider>
+          <PortfolioProvider>
+            <PrestationProvider>{children}</PrestationProvider>
+          </PortfolioProvider>
         </main>
       </body>
     </html>

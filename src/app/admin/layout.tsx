@@ -15,11 +15,6 @@ const ADMIN_ROUTES = [
     icon: "📷",
   },
   {
-    href: "/admin/service/create",
-    label: "Créer Service",
-    icon: "🛠️",
-  },
-  {
     href: "/",
     label: "Retour Site",
     icon: "🌐",

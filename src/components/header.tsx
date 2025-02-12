@@ -34,7 +34,7 @@ const Header: React.FC = () => {
 };
 
 const Nav: React.FC = () => {
-  const pathname = usePathname(); // Get the current path
+  const pathname = usePathname();
 
   const navItems = [
     { href: "/client/realisations", label: "Realisations" },

@@ -13,7 +13,6 @@ export default function PrestationCreate() {
     bannerImage: "",
     otherImage: [],
     description: "",
-    price: 0,
   });
   const { prestations, addPrestation, removePrestation } =
     usePrestationContext();
@@ -62,7 +61,7 @@ export default function PrestationCreate() {
     event.preventDefault();
 
     // Validate inputs
-    if (!pr.name || !pr.bannerImage || !pr.description || pr.price <= 0) {
+    if (!pr.name || !pr.bannerImage || !pr.description) {
       alert("Veuillez remplir tous les champs correctement.");
       return;
     }
@@ -75,7 +74,6 @@ export default function PrestationCreate() {
       bannerImage: "",
       otherImage: [],
       description: "",
-      price: 0,
     });
   };
 
@@ -95,22 +93,6 @@ export default function PrestationCreate() {
                   value={pr.name}
                   onChange={(e) => setPr({ ...pr, name: e.target.value })}
                   required
-                  className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-800 p-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </label>
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-300">
-                Prix :
-                <input
-                  type="number"
-                  value={pr.price}
-                  onChange={(e) =>
-                    setPr({ ...pr, price: Number(e.target.value) })
-                  }
-                  required
-                  step="0.01"
-                  min="0"
                   className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-800 p-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </label>
@@ -214,9 +196,6 @@ export default function PrestationCreate() {
                     <h3 className="font-semibold text-white">
                       {prestation.name}
                     </h3>
-                    <p className="text-sm text-gray-400">
-                      {prestation.price.toFixed(2)} €
-                    </p>
                   </div>
                 </div>
                 <button

@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import useImageExpand from "@/hook/useImageExpand";
 import { usePortfolio } from "@/components/PortfolioContext";
+import SliderPortofolio from "@/components/sliderPortofolio";
 
 const ServiceList: React.FC = () => {
   const { portfolioItems } = usePortfolio();
@@ -27,10 +28,11 @@ const ServiceList: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-around bg-primary p-4">
-      <p className="m-20 text-center text-lg text-white">
+      <p className="m-10 text-center text-lg text-white">
         Découvrez nos réalisations sur mesure pour transformer vos salles de
         bains en espaces uniques.
       </p>
+      <SliderPortofolio />
       <div className="grid h-full w-full grid-cols-1 gap-6 md:grid-cols-3">
         {portfolioItems.map((item, index) => (
           <div key={index} className="flex h-[80vh] w-full flex-col rounded-lg">
@@ -38,8 +40,8 @@ const ServiceList: React.FC = () => {
               <Image
                 src={item.mainImage}
                 alt={item.altText}
-                layout="fill" // required
-                objectFit="cover" // change to suit your needs
+                layout="fill"
+                objectFit="cover"
                 onClick={() => openGallery(item.gallery, 0)}
               />
             </div>

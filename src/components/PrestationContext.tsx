@@ -9,7 +9,6 @@ export type Prestation = {
   bannerImage: string;
   otherImage: string[];
   description: string;
-  price: number;
 };
 
 // Define the context type
