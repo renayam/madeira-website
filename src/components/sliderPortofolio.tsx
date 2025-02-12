@@ -26,7 +26,7 @@ export default function SliderPortofolio() {
             delay: 4000,
             disableOnInteraction: false,
           }}
-          className="h-[700px] w-full overflow-hidden rounded-xl" // Increased height
+          className="h-[55vh] w-full overflow-hidden rounded-xl"
         >
           {portfolioItems.map((item, index) => (
             <SwiperSlide key={item.id} className="relative">

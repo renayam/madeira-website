@@ -14,9 +14,15 @@ const Logo: React.FC<LogoProps> = ({ alt }) => (
   </div>
 );
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  className?: string;
+}
+
+const Header: React.FC<HeaderProps> = ({ className = "" }) => {
   return (
-    <header className="flex w-full flex-col gap-10 text-white shadow-md">
+    <header
+      className={`flex w-full flex-col gap-10 text-white shadow-md ${className}`}
+    >
       <div className="flex h-full flex-col items-center justify-center">
         <Link href="/" className="flex-shrink-0">
           <Logo alt="Logo Madeira.€co" />

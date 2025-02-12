@@ -27,7 +27,7 @@ const ServiceList: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-around bg-primary p-4">
+    <div className="flex flex-col items-center justify-around gap-10 bg-primary p-4">
       <p className="m-10 text-center text-lg text-white">
         Découvrez nos réalisations sur mesure pour transformer vos salles de
         bains en espaces uniques.
