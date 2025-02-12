@@ -17,6 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
+      <head>
+        <link rel="icon" href="/images/logo.png" sizes="any" />
+      </head>
       <body className="flex min-h-screen flex-col bg-primary text-white">
         <main className="min-h-[90vh] flex-grow overflow-auto">
           <ServiceProvider>
