@@ -1,6 +1,8 @@
+"use client";
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation"; // use usePathname instead of useRouter
 
 interface LogoProps {
   alt: string;
@@ -32,41 +34,32 @@ const Header: React.FC = () => {
 };
 
 const Nav: React.FC = () => {
+  const pathname = usePathname(); // Get the current path
+
+  const navItems = [
+    { href: "/client/realisations", label: "Realisations" },
+    { href: "/client/portfolio", label: "Portfolio" },
+    { href: "/client/service", label: "Services" },
+    { href: "/client/contact", label: "Contact" },
+  ];
+
   return (
     <nav>
       <ul className="mx-auto flex w-1/2 flex-row justify-between space-x-0 md:space-x-8">
-        <li>
-          <Link
-            href="/client/realisations"
-            className="block text-base text-white underline transition duration-300 ease-in-out hover:text-secondary"
-          >
-            Realisations
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/client/portfolio"
-            className="block text-base text-white underline transition duration-300 ease-in-out hover:text-secondary"
-          >
-            Portfolio
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/client/service"
-            className="block text-base text-white underline transition duration-300 ease-in-out hover:text-secondary"
-          >
-            Services
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/client/contact"
-            className="block text-base text-white underline transition duration-300 ease-in-out hover:text-secondary"
-          >
-            Contact
-          </Link>
-        </li>
+        {navItems.map((item) => (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              className={`block text-base underline transition duration-300 ease-in-out hover:text-secondary ${
+                pathname.startsWith(item.href)
+                  ? "font-bold text-secondary"
+                  : "text-white"
+              }`}
+            >
+              {item.label}
+            </Link>
+          </li>
+        ))}
       </ul>
     </nav>
   );
