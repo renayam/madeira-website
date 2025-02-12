@@ -8,13 +8,13 @@ interface LogoProps {
 
 const Logo: React.FC<LogoProps> = ({ alt }) => (
   <div className="flex-shrink-0">
-    <Image src="/images/logo.png" alt={alt} width={50} height={20} priority />
+    <Image src="/images/logo.png" alt={alt} width={150} height={40} priority />
   </div>
 );
 
 const Header: React.FC = () => {
   return (
-    <header className="flex w-full flex-col text-white shadow-md">
+    <header className="flex w-full flex-col gap-10 text-white shadow-md">
       <div className="flex h-full flex-col items-center justify-center">
         <Link href="/" className="flex-shrink-0">
           <Logo alt="Logo Madeira.€co" />
@@ -37,24 +37,32 @@ const Nav: React.FC = () => {
       <ul className="mx-auto flex w-1/2 flex-row justify-between space-x-0 md:space-x-8">
         <li>
           <Link
-            href="/portfolio"
-            className="block text-base text-white transition duration-300 ease-in-out hover:text-secondary"
+            href="/client/realisations"
+            className="block text-base text-white underline transition duration-300 ease-in-out hover:text-secondary"
+          >
+            Realisations
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/client/portfolio"
+            className="block text-base text-white underline transition duration-300 ease-in-out hover:text-secondary"
           >
             Portfolio
           </Link>
         </li>
         <li>
           <Link
-            href="/service"
-            className="block text-base text-white transition duration-300 ease-in-out hover:text-secondary"
+            href="/client/service"
+            className="block text-base text-white underline transition duration-300 ease-in-out hover:text-secondary"
           >
             Services
           </Link>
         </li>
         <li>
           <Link
-            href="/contact"
-            className="block text-base text-white transition duration-300 ease-in-out hover:text-secondary"
+            href="/client/contact"
+            className="block text-base text-white underline transition duration-300 ease-in-out hover:text-secondary"
           >
             Contact
           </Link>

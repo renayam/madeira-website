@@ -6,6 +6,8 @@ import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import Link from "next/link";
+import { motion } from "framer-motion";
 
 const images = [
   {
@@ -38,7 +40,7 @@ export default function Home() {
           navigation
           // pagination={{ clickable: true }}
           autoplay={{
-            delay: 2000,
+            delay: 4000,
             disableOnInteraction: false,
           }}
           className="h-[700px] w-full overflow-hidden rounded-xl" // Increased height
@@ -61,6 +63,23 @@ export default function Home() {
             </SwiperSlide>
           ))}
         </Swiper>
+      </div>
+
+      <div className="mt-8 flex justify-center">
+        <motion.div
+          whileHover={{
+            scale: 1.05,
+            transition: { duration: 0.2 },
+          }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Link
+            href="/client/realisations"
+            className="rounded-full bg-blue-600 px-6 py-3 text-white shadow-lg transition-colors duration-300 hover:bg-blue-700"
+          >
+            Découvrir nos services
+          </Link>
+        </motion.div>
       </div>
     </div>
   );
