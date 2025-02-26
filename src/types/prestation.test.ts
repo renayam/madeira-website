@@ -29,26 +29,28 @@ describe("PrestationModel", () => {
     expect(nameAttribute.type.valueOf()).toStrictEqual(DataTypes.STRING());
     expect(nameAttribute.allowNull).toBe(false);
 
-    // // Verify bannerImage attribute
-    // const bannerImageAttribute =
-    //   attributes.banner_image as ModelAttributeColumnOptions;
-    // expect(bannerImageAttribute).toBeDefined();
-    // expect(bannerImageAttribute.type).toBe(DataTypes.STRING);
-    // expect(bannerImageAttribute.allowNull).toBe(false);
+    // Verify bannerImage attribute
+    const bannerImageAttribute =
+      attributes.bannerImage as ModelAttributeColumnOptions;
+    expect(bannerImageAttribute).toBeDefined();
+    expect(bannerImageAttribute.type).toStrictEqual(DataTypes.STRING());
+    expect(bannerImageAttribute.allowNull).toBe(false);
 
-    // // Verify other_image attribute (note the underscored naming)
-    // const otherImageAttribute =
-    //   attributes.other_image as ModelAttributeColumnOptions;
-    // expect(otherImageAttribute).toBeDefined();
-    // expect(otherImageAttribute.type).toBe(DataTypes.ARRAY(DataTypes.STRING));
-    // expect(otherImageAttribute.allowNull).toBe(true);
+    // Verify other_image attribute (note the underscored naming)
+    const otherImageAttribute =
+      attributes.otherImage as ModelAttributeColumnOptions;
+    expect(otherImageAttribute).toBeDefined();
+    expect(otherImageAttribute.type).toStrictEqual(
+      DataTypes.ARRAY(DataTypes.STRING),
+    );
+    expect(otherImageAttribute.allowNull).toBe(true);
 
     // Verify description attribute
-    // const descriptionAttribute =
-    //   attributes.description as ModelAttributeColumnOptions;
-    // expect(descriptionAttribute).toBeDefined();
-    // expect(descriptionAttribute.type).toBe(DataTypes.TEXT);
-    // expect(descriptionAttribute.allowNull).toBe(true);
+    const descriptionAttribute =
+      attributes.description as ModelAttributeColumnOptions;
+    expect(descriptionAttribute).toBeDefined();
+    expect(descriptionAttribute.type).toStrictEqual(DataTypes.TEXT());
+    expect(descriptionAttribute.allowNull).toBe(true);
   });
 
   it("should have model registered in Sequelize instance", () => {
