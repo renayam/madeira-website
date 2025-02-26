@@ -1,15 +1,7 @@
 "use client";
 
+import { Prestation } from "@/types/prestation";
 import React, { createContext, useState, useContext, ReactNode } from "react";
-
-// Define the Prestation type
-export type Prestation = {
-  id: number;
-  name: string;
-  bannerImage: string;
-  otherImage: string[];
-  description: string;
-};
 
 // Define the context type
 type PrestationContextType = {

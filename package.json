@@ -5,10 +5,10 @@
   "scripts": {
     "pretest": "npm run docker:up",
     "posttest": "npm run docker:down",
-    "test": "npx jest",
+    "test": "npx jest --detectOpenHandles",
     "pretest:watch": "npm run docker:up",
     "posttest:watch": "npm run docker:down",
-    "test:watch": "npx jest --watch",
+    "test:watch": "npx jest --watch --detectOpenHandles",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "dev": "next dev",

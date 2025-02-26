@@ -1,16 +1,15 @@
 import { Sequelize } from "sequelize";
 
-// Database configuration
 const DB_CONFIG = {
   host: process.env.DB_HOST || "localhost",
   port: parseInt(process.env.DB_PORT || "3306"),
-  database: process.env.DB_NAME || "madeira_db",
+  database: (process.env.DB_NAME as string) || "madeira_db",
   username: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "admin",
 };
 
 // Create Sequelize instance
-export const sequelize = new Sequelize(
+const SequelizeInstance = new Sequelize(
   DB_CONFIG.database,
   DB_CONFIG.username,
   DB_CONFIG.password,
@@ -32,24 +31,37 @@ export const sequelize = new Sequelize(
   },
 );
 
-export async function testDatabaseConnection() {
-  try {
-    await sequelize.authenticate();
-    console.log("MariaDB connection has been established successfully.");
-    return true;
-  } catch (error) {
-    console.error("Unable to connect to the database:", error);
-    return false;
-  }
-}
+export class DatabaseService {
+  private static instance: Sequelize | null = null;
+  private constructor() {}
 
-// Sync models (optional, use with caution in production)
-export async function syncDatabase() {
-  try {
-    // Uncomment and customize as needed
-    // await sequelize.sync({ alter: true });
-    console.log("Database synchronized");
-  } catch (error) {
-    console.error("Error synchronizing database:", error);
+  public static getInstance(): Sequelize {
+    if (!DatabaseService.instance) {
+      DatabaseService.instance = SequelizeInstance;
+    }
+    return DatabaseService.instance;
+  }
+
+  static async testConnection() {
+    try {
+      await SequelizeInstance.authenticate();
+      return true;
+    } catch (error) {
+      console.error("Database connection failed:", error);
+      throw error;
+    }
+  }
+
+  static async sync() {
+    try {
+      await SequelizeInstance.sync({
+        alter: true,
+        force: true,
+      });
+      return true;
+    } catch (error) {
+      console.error("Database synchronization failed:", error);
+      throw error;
+    }
   }
 }

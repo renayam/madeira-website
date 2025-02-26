@@ -2,16 +2,6 @@
 
 import React, { createContext, useState, useContext, ReactNode } from "react";
 
-// Define the Portfolio Item type
-export interface PortfolioItem {
-  id: number;
-  title: string;
-  description: string;
-  mainImage: string;
-  gallery: string[];
-  altText: string;
-}
-
 // Define the context type
 interface PortfolioContextType {
   portfolioItems: PortfolioItem[];
