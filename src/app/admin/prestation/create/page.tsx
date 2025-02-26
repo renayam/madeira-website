@@ -1,10 +1,11 @@
 "use client";
+import React from "react";
+import { useState, ChangeEvent } from "react";
+import Image from "next/image";
 import {
   Prestation,
   usePrestationContext,
-} from "@/components/PrestationContext";
-import { useState, ChangeEvent } from "react";
-import Image from "next/image";
+} from "../../../../components/PrestationContext";
 
 export default function PrestationCreate() {
   const [pr, setPr] = useState<Prestation>({
