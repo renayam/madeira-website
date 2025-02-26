@@ -4,48 +4,37 @@ import { DatabaseService } from "../service/storage";
 
 describe("PrestationModel", () => {
   it("should be correctly initialized from Sequelize instance", () => {
-    // Get the model from Sequelize instance
     const model = DatabaseService.getInstance().models.Prestation;
 
-    // Verify model exists
     expect(model).toBeDefined();
 
-    // Verify the model is a subclass of Model
     expect(model.prototype instanceof Model).toBeTruthy();
 
-    // Get model attributes directly from Sequelize
     const attributes = model.getAttributes();
 
-    // Verify id attribute
     const idAttribute = attributes.id as ModelAttributeColumnOptions;
     expect(idAttribute).toBeDefined();
     expect(idAttribute.type.valueOf()).toStrictEqual(DataTypes.INTEGER());
     expect(idAttribute.primaryKey).toBe(true);
     expect(idAttribute.autoIncrement).toBe(true);
 
-    // Verify name attribute
     const nameAttribute = attributes.name as ModelAttributeColumnOptions;
     expect(nameAttribute).toBeDefined();
     expect(nameAttribute.type.valueOf()).toStrictEqual(DataTypes.STRING());
     expect(nameAttribute.allowNull).toBe(false);
 
-    // Verify bannerImage attribute
     const bannerImageAttribute =
       attributes.bannerImage as ModelAttributeColumnOptions;
     expect(bannerImageAttribute).toBeDefined();
     expect(bannerImageAttribute.type).toStrictEqual(DataTypes.STRING());
     expect(bannerImageAttribute.allowNull).toBe(false);
 
-    // Verify other_image attribute (note the underscored naming)
-    // const otherImageAttribute =
-    //   attributes.otherImage as ModelAttributeColumnOptions;
-    // expect(otherImageAttribute).toBeDefined();
-    // expect(otherImageAttribute.type).toStrictEqual(
-    //   DataTypes.ARRAY(DataTypes.STRING),
-    // );
-    // expect(otherImageAttribute.allowNull).toBe(true);
+    const otherImageAttribute =
+      attributes.otherImage as ModelAttributeColumnOptions;
+    expect(otherImageAttribute).toBeDefined();
+    expect(otherImageAttribute.type).toStrictEqual(DataTypes.STRING());
+    expect(otherImageAttribute.allowNull).toBe(true);
 
-    // Verify description attribute
     const descriptionAttribute =
       attributes.description as ModelAttributeColumnOptions;
     expect(descriptionAttribute).toBeDefined();
@@ -66,7 +55,7 @@ describe("PrestationModel", () => {
       id: 1,
       name: "Test Prestation",
       bannerImage: "test-banner.jpg",
-      otherImage: ["image1.jpg", "image2.jpg"],
+      otherImage: "image1.jpg;image2.jpg",
       description: "Test description",
     };
 
@@ -77,7 +66,7 @@ describe("PrestationModel", () => {
     expect(prestationInstance.id).toBe(testData.id);
     expect(prestationInstance.name).toBe(testData.name);
     expect(prestationInstance.bannerImage).toBe(testData.bannerImage);
-    // expect(prestationInstance.otherImage).toEqual(testData.otherImage);
+    expect(prestationInstance.otherImage).toEqual(testData.otherImage);
     expect(prestationInstance.description).toBe(testData.description);
   });
 

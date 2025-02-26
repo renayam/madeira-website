@@ -66,8 +66,6 @@ export class DatabaseService {
     }
   }
 
-  static async createTableFromType() {}
-
   static async getAllTable() {
     const tables = await SequelizeInstance.query(
       "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()",
@@ -76,5 +74,15 @@ export class DatabaseService {
       },
     );
     return tables;
+  }
+
+  static async reset() {
+    try {
+      await SequelizeInstance.sync({ force: true });
+      return true;
+    } catch (error) {
+      console.error("Database reset failed:", error);
+      throw error;
+    }
   }
 }
