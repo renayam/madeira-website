@@ -3,7 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "pretest": "npm run docker:up",
+    "posttest": "npm run docker:down",
     "test": "npx jest",
+    "pretest:watch": "npm run docker:up",
+    "posttest:watch": "npm run docker:down",
     "test:watch": "npx jest --watch",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
