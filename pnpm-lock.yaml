@@ -97,7 +97,7 @@ importers:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@20.17.19)(typescript@5.7.3)
       typescript:
-        specifier: ^5
+        specifier: ^5.7.3
         version: 5.7.3
       typescript-eslint:
         specifier: ^8.25.0

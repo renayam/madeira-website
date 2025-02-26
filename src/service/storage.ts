@@ -32,7 +32,6 @@ export const sequelize = new Sequelize(
   },
 );
 
-// Test connection
 export async function testDatabaseConnection() {
   try {
     await sequelize.authenticate();
