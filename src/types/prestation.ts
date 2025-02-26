@@ -5,7 +5,7 @@ export type Prestation = {
   id: number;
   name: string;
   bannerImage: string;
-  otherImage: string[];
+  // otherImage: string[];
   description: string;
 };
 
@@ -13,8 +13,10 @@ export class PrestationModel extends Model<Prestation> {
   declare id: number;
   declare name: string;
   declare bannerImage: string;
-  declare otherImage: string[];
+  // declare otherImage: string[];
   declare description: string;
+  declare created_at: Date;
+  declare updated_at: Date;
 
   static initialize() {
     const sequelize = DatabaseService.getInstance();
@@ -34,11 +36,11 @@ export class PrestationModel extends Model<Prestation> {
           field: "banner_image",
           allowNull: false,
         },
-        otherImage: {
-          type: DataTypes.ARRAY(DataTypes.STRING),
-          field: "other_image",
-          allowNull: true,
-        },
+        // otherImage: {
+        //   type: DataTypes.STRING, // Store as a JSON string
+        //   field: "other_image",
+        //   allowNull: true,
+        // },
         description: {
           type: DataTypes.TEXT,
           allowNull: true,
@@ -52,5 +54,19 @@ export class PrestationModel extends Model<Prestation> {
       },
     );
   }
+
+  // Helper method to add images
+  // addOtherImage(image: string) {
+  //   const currentImages = this.otherImage || [];
+  //   this.otherImage = [...currentImages, image];
+  // }
+
+  // Helper method to remove images
+  // removeOtherImage(image: string) {
+  //   this.otherImage = (this.otherImage || []).filter((img) => img !== image);
+  // }
 }
+
+// Initialize the model
 PrestationModel.initialize();
+PrestationModel.sync();
