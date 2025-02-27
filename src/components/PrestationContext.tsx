@@ -28,15 +28,22 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [prestations, setPrestations] = useState<Prestation[]>([]);
 
-  const addPrestation = (prestation: Prestation) => {
-    fetch("/api/prestation", {
+  const addPrestation = async (prestation: Prestation) => {
+    const response = await fetch("/api/prestation", {
       method: "POST",
       body: JSON.stringify(prestation),
     });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     // setPrestations((prevPrestations) => [...prevPrestations, prestation]);
   };
 
-  const removePrestation = (id: number) => {
+  const removePrestation = async (id: number) => {
+    const response = await fetch(`/api/prestation/${id}`, { method: "DELETE" });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     setPrestations((prevPrestations) =>
       prevPrestations.filter((prestation) => prestation.id !== id),
     );
