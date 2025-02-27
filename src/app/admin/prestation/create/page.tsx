@@ -173,8 +173,6 @@ export default function PrestationCreate() {
           <p className="text-gray-400">Aucune prestation créée</p>
         ) : (
           <div className="space-y-4">
-            {/*
-
             {prestations?.map((prestation) => (
               <div
                 key={prestation.id}
@@ -197,14 +195,13 @@ export default function PrestationCreate() {
                   </div>
                 </div>
                 <button
-                  onClick={() => removePrestation(prestation.id)}
+                  onClick={() => removePrestation(prestation?.id as number)}
                   className="text-red-500 transition hover:text-red-700"
                 >
                   🗑️
                 </button>
               </div>
             ))}
-			*/}
           </div>
         )}
       </div>

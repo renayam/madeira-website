@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const d = DatabaseService.getInstance();
     const p = await PrestationModel.initialize(d);
-    const prestations = p.findAll();
+    const prestations = await p.findAll();
     return NextResponse.json(prestations);
   } catch (error) {
     console.error("Error fetching prestations:", error);

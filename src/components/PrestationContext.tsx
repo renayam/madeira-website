@@ -51,20 +51,36 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchPrestations = async () => {
       try {
-        const response = await fetch("/api/prestation");
+        const response = await fetch("/api/prestation", {
+          signal: controller.signal,
+        });
+
         if (!response.ok) {
-          throw new Error("Network response was not ok");
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data = await response.json();
+
+        const data: Prestation[] = await response.json();
         setPrestations(data);
       } catch (error) {
-        console.error("Error fetching prestations:", error);
+        if (error instanceof Error)
+          if (error.name !== "AbortError") {
+            console.error("Error fetching prestations:", error.message);
+            // Optional: Add user-friendly error state
+            // setError('Failed to load prestations');
+          }
       }
     };
 
     fetchPrestations();
+
+    // Cleanup function to cancel ongoing fetch if component unmounts
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   return (
