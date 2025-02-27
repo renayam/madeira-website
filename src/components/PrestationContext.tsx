@@ -12,9 +12,9 @@ import React, {
 // Define the context type
 type PrestationContextType = {
   prestations: Prestation[];
-  addPrestation: (prestation: Prestation) => void;
-  removePrestation: (id: number) => void;
-  updatePrestation: (prestation: Prestation) => void;
+  addPrestation: (prestation: Prestation) => Promise<Prestation | null>;
+  removePrestation: (id: number) => Promise<boolean>;
+  updatePrestation: (prestation: Prestation) => Promise<Prestation | null>;
 };
 
 // Create the context
@@ -29,32 +29,87 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
   const [prestations, setPrestations] = useState<Prestation[]>([]);
 
   const addPrestation = async (prestation: Prestation) => {
-    const response = await fetch("/api/prestation", {
-      method: "POST",
-      body: JSON.stringify(prestation),
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+      const response = await fetch("/api/prestation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(prestation),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const newPrestation = await response.json();
+      setPrestations((prevPrestations) => [
+        ...prevPrestations,
+        newPrestation.prestation,
+      ]);
+      return newPrestation.prestation;
+    } catch (error) {
+      console.error("Error adding prestation:", error);
+      return null;
     }
-    // setPrestations((prevPrestations) => [...prevPrestations, prestation]);
   };
 
   const removePrestation = async (id: number) => {
-    const response = await fetch(`/api/prestation/${id}`, { method: "DELETE" });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+      const response = await fetch(`/api/prestation/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      setPrestations((prevPrestations) =>
+        prevPrestations.filter((prestation) => prestation.id !== id),
+      );
+      return true;
+    } catch (error) {
+      console.error("Error removing prestation:", error);
+      return false;
     }
-    setPrestations((prevPrestations) =>
-      prevPrestations.filter((prestation) => prestation.id !== id),
-    );
   };
 
-  const updatePrestation = (updatedPrestation: Prestation) => {
-    setPrestations((prevPrestations) =>
-      prevPrestations.map((prestation) =>
-        prestation.id === updatedPrestation.id ? updatedPrestation : prestation,
-      ),
-    );
+  const updatePrestation = async (updatedPrestation: Prestation) => {
+    try {
+      // Validate that the prestation has an ID
+      if (!updatedPrestation.id) {
+        throw new Error("Prestation must have an ID to update");
+      }
+
+      const response = await fetch(`/api/prestation/${updatedPrestation.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedPrestation),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      const serverUpdatedPrestation = result.prestation;
+
+      // Update the prestations state with the server-confirmed prestation
+      setPrestations((prevPrestations) =>
+        prevPrestations.map((prestation) =>
+          prestation.id === updatedPrestation.id
+            ? serverUpdatedPrestation
+            : prestation,
+        ),
+      );
+
+      return serverUpdatedPrestation;
+    } catch (error) {
+      console.error("Error updating prestation:", error);
+      return null;
+    }
   };
 
   useEffect(() => {
@@ -76,8 +131,6 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
         if (error instanceof Error)
           if (error.name !== "AbortError") {
             console.error("Error fetching prestations:", error.message);
-            // Optional: Add user-friendly error state
-            // setError('Failed to load prestations');
           }
       }
     };
