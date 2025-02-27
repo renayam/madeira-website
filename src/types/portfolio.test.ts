@@ -4,7 +4,8 @@ import { DatabaseService } from "../service/storage";
 
 describe("PortfolioItemModel", () => {
   it("should be correctly initialized from Sequelize instance", () => {
-    const model = DatabaseService.getInstance().models.PortfolioItem;
+    const model =
+      DatabaseService.getInstance().getSequelizeInstance().models.PortfolioItem;
 
     expect(model).toBeDefined();
 
@@ -48,10 +49,12 @@ describe("PortfolioItemModel", () => {
 
   it("should have model registered in Sequelize instance", () => {
     // Check that the model is registered in Sequelize models
-    expect(DatabaseService.getInstance().models.PortfolioItem).toBeDefined();
-    expect(DatabaseService.getInstance().models.PortfolioItem).toBe(
-      PortfolioItemModel,
-    );
+    expect(
+      DatabaseService.getInstance().getSequelizeInstance().models.PortfolioItem,
+    ).toBeDefined();
+    expect(
+      DatabaseService.getInstance().getSequelizeInstance().models.PortfolioItem,
+    ).toBe(PortfolioItemModel);
   });
 
   it("should create a model instance", () => {

@@ -19,6 +19,7 @@
     "postdev": "npm run docker:down"
   },
   "dependencies": {
+    "@sequelize/mariadb": "7.0.0-alpha.45",
     "dotenv": "^16.4.7",
     "framer-motion": "^12.4.2",
     "mariadb": "^3.4.0",

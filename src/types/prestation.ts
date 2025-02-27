@@ -2,9 +2,9 @@ import { DatabaseService } from "../service/storage";
 import { DataTypes, Model, ModelAttributes, InitOptions } from "sequelize";
 
 export type Prestation = {
-  id: number;
+  id?: number;
   name: string;
-  bannerImage: string;
+  bannerImage?: string;
   otherImage: string;
   description: string;
 };
@@ -18,8 +18,8 @@ export class PrestationModel extends Model<Prestation> {
   declare created_at: Date;
   declare updated_at: Date;
 
-  static initialize() {
-    const sequelize = DatabaseService.getInstance();
+  static async initialize(db: DatabaseService) {
+    const sequelize = db.connection;
 
     const modelAttributes: ModelAttributes<PrestationModel, Prestation> = {
       id: {
@@ -32,7 +32,7 @@ export class PrestationModel extends Model<Prestation> {
         allowNull: false,
       },
       bannerImage: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         allowNull: false,
         field: "banner_image",
       },
@@ -52,10 +52,19 @@ export class PrestationModel extends Model<Prestation> {
       tableName: "prestations",
       underscored: true,
     };
+    try {
+      await sequelize.authenticate();
 
-    return this.init(modelAttributes, options);
+      const model = this.init(modelAttributes, options);
+
+      await model.sync();
+
+      return model;
+    } catch (error) {
+      throw error;
+    }
   }
 }
 
-PrestationModel.initialize();
-PrestationModel.sync();
+// PrestationModel.initialize();
+// PrestationModel.sync();

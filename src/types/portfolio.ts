@@ -20,8 +20,8 @@ export class PortfolioItemModel extends Model<PortfolioItem> {
   declare created_at: Date;
   declare updated_at: Date;
 
-  static initialize() {
-    const sequelize = DatabaseService.getInstance();
+  static initialize(db: DatabaseService) {
+    const sequelize = db.connection;
 
     const modelAttributes: ModelAttributes<PortfolioItemModel, PortfolioItem> =
       {
@@ -64,6 +64,3 @@ export class PortfolioItemModel extends Model<PortfolioItem> {
     return this.init(modelAttributes, options);
   }
 }
-
-PortfolioItemModel.initialize();
-PortfolioItemModel.sync();

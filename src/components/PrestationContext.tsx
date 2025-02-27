@@ -1,7 +1,13 @@
 "use client";
 
 import { Prestation } from "@/types/prestation";
-import React, { createContext, useState, useContext, ReactNode } from "react";
+import React, {
+  createContext,
+  useState,
+  useContext,
+  ReactNode,
+  useEffect,
+} from "react";
 
 // Define the context type
 type PrestationContextType = {
@@ -23,7 +29,11 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
   const [prestations, setPrestations] = useState<Prestation[]>([]);
 
   const addPrestation = (prestation: Prestation) => {
-    setPrestations((prevPrestations) => [...prevPrestations, prestation]);
+    fetch("/api/prestation", {
+      method: "POST",
+      body: JSON.stringify(prestation),
+    });
+    // setPrestations((prevPrestations) => [...prevPrestations, prestation]);
   };
 
   const removePrestation = (id: number) => {
@@ -39,6 +49,23 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
       ),
     );
   };
+
+  useEffect(() => {
+    const fetchPrestations = async () => {
+      try {
+        const response = await fetch("/api/prestation");
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
+        setPrestations(data);
+      } catch (error) {
+        console.error("Error fetching prestations:", error);
+      }
+    };
+
+    fetchPrestations();
+  }, []);
 
   return (
     <PrestationContext.Provider

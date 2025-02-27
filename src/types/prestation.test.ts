@@ -1,10 +1,11 @@
 import { DataTypes, Model, ModelAttributeColumnOptions } from "sequelize";
-import { PrestationModel } from "../types/prestation";
+import { Prestation, PrestationModel } from "../types/prestation";
 import { DatabaseService } from "../service/storage";
 
 describe("PrestationModel", () => {
   it("should be correctly initialized from Sequelize instance", () => {
-    const model = DatabaseService.getInstance().models.Prestation;
+    const model =
+      DatabaseService.getInstance().getSequelizeInstance().models.Prestation;
 
     expect(model).toBeDefined();
 
@@ -26,7 +27,7 @@ describe("PrestationModel", () => {
     const bannerImageAttribute =
       attributes.bannerImage as ModelAttributeColumnOptions;
     expect(bannerImageAttribute).toBeDefined();
-    expect(bannerImageAttribute.type).toStrictEqual(DataTypes.STRING());
+    expect(bannerImageAttribute.type).toStrictEqual(DataTypes.TEXT());
     expect(bannerImageAttribute.allowNull).toBe(false);
 
     const otherImageAttribute =
@@ -44,10 +45,12 @@ describe("PrestationModel", () => {
 
   it("should have model registered in Sequelize instance", () => {
     // Check that the model is registered in Sequelize models
-    expect(DatabaseService.getInstance().models.Prestation).toBeDefined();
-    expect(DatabaseService.getInstance().models.Prestation).toBe(
-      PrestationModel,
-    );
+    expect(
+      DatabaseService.getInstance().getSequelizeInstance().models.Prestation,
+    ).toBeDefined();
+    expect(
+      DatabaseService.getInstance().getSequelizeInstance().models.Prestation,
+    ).toBe(PrestationModel);
   });
 
   it("should create a model instance", () => {
@@ -57,7 +60,7 @@ describe("PrestationModel", () => {
       bannerImage: "test-banner.jpg",
       otherImage: "image1.jpg;image2.jpg",
       description: "Test description",
-    };
+    } as Prestation;
 
     const prestationInstance = new PrestationModel(testData);
 

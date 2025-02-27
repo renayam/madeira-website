@@ -2,23 +2,19 @@
 import React from "react";
 import { useState, ChangeEvent } from "react";
 import Image from "next/image";
-import {
-  Prestation,
-  usePrestationContext,
-} from "../../../../components/PrestationContext";
+import { usePrestationContext } from "../../../../components/PrestationContext";
+import { Prestation } from "@/types/prestation";
 
 export default function PrestationCreate() {
   const [pr, setPr] = useState<Prestation>({
-    id: Date.now(),
     name: "",
     bannerImage: "",
-    otherImage: [],
+    otherImage: "",
     description: "",
   });
   const { prestations, addPrestation, removePrestation } =
     usePrestationContext();
 
-  // Convert file to base64
   const convertToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -28,13 +24,12 @@ export default function PrestationCreate() {
     });
   };
 
-  // Handle banner image upload
   const handleBannerImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       try {
         const base64 = await convertToBase64(file);
-        setPr({ ...pr, bannerImage: base64 });
+        // setPr({ ...pr, bannerImage: base64 });
       } catch (error) {
         console.error("Error uploading banner image:", error);
         alert("Erreur lors du téléchargement de l'image de bannière");
@@ -42,14 +37,15 @@ export default function PrestationCreate() {
     }
   };
 
-  // Handle other images upload
   const handleOtherImagesUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
       try {
-        const base64Images = await Promise.all(
-          Array.from(files).map(convertToBase64),
-        );
+        // const base64Images = await Promise.all(
+        //   Array.from(files).map(convertToBase64),
+        // );
+        const base64Images = "";
+
         setPr({ ...pr, otherImage: base64Images });
       } catch (error) {
         console.error("Error uploading other images:", error);
@@ -61,19 +57,16 @@ export default function PrestationCreate() {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    // Validate inputs
-    if (!pr.name || !pr.bannerImage || !pr.description) {
+    if (!pr.name || !pr.description) {
       alert("Veuillez remplir tous les champs correctement.");
       return;
     }
 
     addPrestation(pr);
-    // Reset form
     setPr({
-      id: Date.now(),
       name: "",
       bannerImage: "",
-      otherImage: [],
+      otherImage: "",
       description: "",
     });
   };
@@ -132,7 +125,8 @@ export default function PrestationCreate() {
                 />
               </label>
               {pr.otherImage.length > 0 && (
-                <div className="mt-2 grid grid-cols-3 gap-2">
+                <div className="m-2 grid grid-cols-3 gap-2">
+                  {/*
                   {pr.otherImage.map((img, index) => (
                     <Image
                       key={index}
@@ -143,6 +137,7 @@ export default function PrestationCreate() {
                       className="rounded-md object-cover"
                     />
                   ))}
+                  */}
                 </div>
               )}
             </div>
@@ -174,11 +169,13 @@ export default function PrestationCreate() {
         <h2 className="mb-4 text-xl font-bold text-white">
           Liste des Prestations
         </h2>
-        {prestations.length === 0 ? (
+        {prestations?.length === 0 ? (
           <p className="text-gray-400">Aucune prestation créée</p>
         ) : (
           <div className="space-y-4">
-            {prestations.map((prestation) => (
+            {/*
+
+            {prestations?.map((prestation) => (
               <div
                 key={prestation.id}
                 className="flex items-center justify-between rounded-lg bg-gray-800 p-4"
@@ -207,6 +204,7 @@ export default function PrestationCreate() {
                 </button>
               </div>
             ))}
+			*/}
           </div>
         )}
       </div>
