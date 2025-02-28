@@ -16,19 +16,15 @@ const PrestationSchema = z.object({
 const PrestationCreateSchema = PrestationSchema.omit({ id: true });
 const PrestationUpdateSchema = PrestationSchema.partial();
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { id: string } },
-) {
-  console.log(params);
-  const { id } = params;
+export async function DELETE(request: NextRequest): Promise<Response> {
+  // Extract the ID from the URL
+  const id = request.nextUrl.pathname.split("/").pop();
+
+  if (!id) {
+    return NextResponse.json({ error: "No ID provided" }, { status: 400 });
+  }
 
   try {
-    // Validate ID
-    if (!id) {
-      return NextResponse.json({ error: "No ID provided" }, { status: 400 });
-    }
-
     // Find the prestation
     const con = DatabaseService.getInstance();
     await PrestationModel.initialize(con);
@@ -38,7 +34,7 @@ export async function DELETE(
     if (!prestation) {
       return NextResponse.json(
         { error: "Prestation not found" },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -48,7 +44,7 @@ export async function DELETE(
     // Return successful response
     return NextResponse.json(
       { message: "Prestation successfully deleted" },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("Error deleting prestation:", error);
@@ -58,10 +54,11 @@ export async function DELETE(
         error: "Failed to delete the prestation",
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
+
 
 export async function PUT(request: NextRequest) {
   const id = request.nextUrl.href.split("/").pop();
@@ -129,12 +126,9 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function PATCH(request: NextRequest) {
   try {
-    const { id } = params;
+    const id = request.nextUrl.pathname.split("/").pop();
 
     // Validate ID
     if (!id) {

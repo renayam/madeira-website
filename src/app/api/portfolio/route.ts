@@ -61,9 +61,8 @@ export async function POST(request: NextRequest) {
         const instance = await DatabaseService.getInstance();
         await PortfolioItemModel.initialize(instance);
         const portfolioItem = await PortfolioItemModel.create({
-            id: crypto.randomUUID(), // Add required id field
             ...portfolioData
-        });
+        } as PortfolioItemModel);
 
         console.log("Portfolio item created successfully:", portfolioItem.toJSON());
         return NextResponse.json(portfolioItem);

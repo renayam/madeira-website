@@ -29,7 +29,7 @@ const PrestationList: React.FC = () => {
         <p className="text-center text-gray-500">Aucune prestation créée</p>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {(prestations as Prestation[]).map((prestation) => (
+          {prestations.map((prestation: Prestation) => (
             <div
               key={prestation.id}
               className="transform overflow-hidden rounded-lg bg-white shadow-md transition-all hover:scale-105"
@@ -54,7 +54,7 @@ const PrestationList: React.FC = () => {
                 <p className="mb-2 text-gray-600">{prestation.description}</p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {typeof prestation.otherImage === 'string' ? (
+                  {typeof prestation.otherImage === 'string' && (
                     <div className="relative h-16 w-16">
                       <Image
                         src={prestation.otherImage}
@@ -65,7 +65,8 @@ const PrestationList: React.FC = () => {
                         onClick={() => openImage(prestation.otherImage)}
                       />
                     </div>
-                  ) : Array.isArray(prestation.otherImage) && (
+                  )}
+                  {Array.isArray(prestation.otherImage) &&
                     prestation.otherImage.map((image: string, index: number) => (
                       <div key={index} className="relative h-16 w-16">
                         <Image
@@ -77,8 +78,7 @@ const PrestationList: React.FC = () => {
                           onClick={() => openImage(image)}
                         />
                       </div>
-                    ))
-                  )}
+                    ))}
                 </div>
               </div>
             </div>
