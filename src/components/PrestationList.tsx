@@ -3,10 +3,22 @@ import React from "react";
 import Image from "next/image";
 import { usePrestationContext } from "@/components/PrestationContext";
 import useImageExpand from "@/hook/useImageExpand";
+import { Prestation } from "@/types/prestation";
 
 const PrestationList: React.FC = () => {
-  const { prestations } = usePrestationContext();
+  const { prestations, isLoading } = usePrestationContext();
   const { expandedImage, openImage, closeImage } = useImageExpand();
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <p className="text-lg text-gray-600">Chargement des prestations...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -17,22 +29,23 @@ const PrestationList: React.FC = () => {
         <p className="text-center text-gray-500">Aucune prestation créée</p>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {prestations.map((prestation) => (
+          {(prestations as Prestation[]).map((prestation) => (
             <div
               key={prestation.id}
               className="transform overflow-hidden rounded-lg bg-white shadow-md transition-all hover:scale-105"
             >
-              {/* Banner Image */}
-              <div className="relative h-48 w-full">
-                <Image
-                  src={prestation.bannerImage}
-                  alt={`Bannière de ${prestation.name}`}
-                  layout="fill"
-                  objectFit="cover"
-                  className="cursor-pointer"
-                  onClick={() => openImage(prestation.bannerImage)}
-                />
-              </div>
+              {prestation.bannerImage && (
+                <div className="relative h-48 w-full">
+                  <Image
+                    src={prestation.bannerImage}
+                    alt={`Bannière de ${prestation.name}`}
+                    layout="fill"
+                    objectFit="cover"
+                    className="cursor-pointer"
+                    onClick={() => openImage(prestation.bannerImage || '')}
+                  />
+                </div>
+              )}
 
               <div className="p-4">
                 <h3 className="mb-2 text-xl font-semibold">
@@ -41,18 +54,31 @@ const PrestationList: React.FC = () => {
                 <p className="mb-2 text-gray-600">{prestation.description}</p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {prestation.otherImage.map((image, index) => (
-                    <div key={index} className="relative h-16 w-16">
+                  {typeof prestation.otherImage === 'string' ? (
+                    <div className="relative h-16 w-16">
                       <Image
-                        src={image}
-                        alt={`Image secondaire ${index + 1}`}
+                        src={prestation.otherImage}
+                        alt="Image secondaire"
                         layout="fill"
                         objectFit="cover"
                         className="cursor-pointer rounded-md"
-                        onClick={() => openImage(image)}
+                        onClick={() => openImage(prestation.otherImage)}
                       />
                     </div>
-                  ))}
+                  ) : Array.isArray(prestation.otherImage) && (
+                    prestation.otherImage.map((image: string, index: number) => (
+                      <div key={index} className="relative h-16 w-16">
+                        <Image
+                          src={image}
+                          alt={`Image secondaire ${index + 1}`}
+                          layout="fill"
+                          objectFit="cover"
+                          className="cursor-pointer rounded-md"
+                          onClick={() => openImage(image)}
+                        />
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
