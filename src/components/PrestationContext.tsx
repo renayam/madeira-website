@@ -13,9 +13,9 @@ import React, {
 type PrestationContextType = {
   prestations: Prestation[];
   isLoading: boolean;
-  AddPrestation: (prestation: Prestation) => Promise<Prestation | null>;
+  AddPrestation: (formData: FormData) => Promise<Prestation | null>;
   removePrestation: (id: number) => Promise<boolean>;
-  updatePrestation: (prestation: Prestation) => Promise<Prestation | null>;
+  updatePrestation: (formData: FormData) => Promise<Prestation | null>;
 };
 
 // Create the context
@@ -30,33 +30,23 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
   const [prestations, setPrestations] = useState<Prestation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const AddPrestation = async (prestation: Prestation) => {
-    setIsLoading(true);
+  const AddPrestation = async (formData: FormData): Promise<Prestation | null> => {
     try {
       const response = await fetch("/api/prestation", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(prestation),
+        body: formData,
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      } else {
-        const newPrestation = await response.json();
-        const typedPrestation = newPrestation.prestation as Prestation;
-        setPrestations((prevPrestations) => [
-          ...prevPrestations,
-          typedPrestation,
-        ]);
-        return newPrestation.prestation;
+        throw new Error("Failed to add prestation");
       }
+
+      const newPrestation = await response.json();
+      setPrestations((prev) => [...prev, newPrestation]);
+      return newPrestation;
     } catch (error) {
       console.error("Error adding prestation:", error);
       return null;
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -83,44 +73,27 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const updatePrestation = async (updatedPrestation: Prestation) => {
-    setIsLoading(true);
+  const updatePrestation = async (formData: FormData): Promise<Prestation | null> => {
     try {
-      // Validate that the prestation has an ID
-      if (!updatedPrestation.id) {
-        throw new Error("Prestation must have an ID to update");
-      }
-
-      const response = await fetch(`/api/prestation/${updatedPrestation.id}`, {
+      const response = await fetch(`/api/prestation/${formData.get("id")}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedPrestation),
+        body: formData,
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error("Failed to update prestation");
       }
 
-      const result = await response.json();
-      const serverUpdatedPrestation = result.prestation;
-
-      // Update the prestations state with the server-confirmed prestation
-      setPrestations((prevPrestations) =>
-        prevPrestations.map((prestation) =>
-          prestation.id === updatedPrestation.id
-            ? serverUpdatedPrestation
-            : prestation,
-        ),
+      const updatedPrestation = await response.json();
+      setPrestations((prev) =>
+        prev.map((p) =>
+          p.id === updatedPrestation.id ? updatedPrestation : p
+        )
       );
-
-      return serverUpdatedPrestation;
+      return updatedPrestation;
     } catch (error) {
       console.error("Error updating prestation:", error);
       return null;
-    } finally {
-      setIsLoading(false);
     }
   };
 

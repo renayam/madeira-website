@@ -1,15 +1,22 @@
-import { DatabaseService } from "../service/storage";
+import { DatabaseService } from "@/service/storage.server";
 import { DataTypes, Model, ModelAttributes, InitOptions } from "sequelize";
 
-export type Prestation = {
-  id: number;
+export interface Prestation {
+  id?: number;
   name: string;
   bannerImage: string;
   otherImage: string;
   description: string;
-};
+}
 
-export type PrestationCreate = Omit<Prestation, "id">;
+export interface PrestationCreate {
+  name: string;
+  bannerImage: string;
+  otherImage: string;
+  description: string;
+  bannerImageFile?: File | null;
+  otherImageFile?: File | null;
+}
 
 export class PrestationModel extends Model<Prestation> {
   declare id: number;
@@ -39,8 +46,9 @@ export class PrestationModel extends Model<Prestation> {
         field: "banner_image",
       },
       otherImage: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         allowNull: true,
+        field: "other_image",
       },
       description: {
         type: DataTypes.TEXT,
@@ -59,7 +67,7 @@ export class PrestationModel extends Model<Prestation> {
 
       const model = this.init(modelAttributes, options);
 
-      await model.sync();
+      await model.sync({ alter: true });
 
       return model;
     } catch (error) {

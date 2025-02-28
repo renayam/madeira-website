@@ -1,4 +1,4 @@
-import { DatabaseService } from "@/service/storage";
+import { DatabaseService } from "../../../../service/storage.server";
 import { PrestationModel, Prestation } from "@/types/prestation";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
