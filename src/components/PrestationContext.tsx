@@ -12,7 +12,8 @@ import React, {
 // Define the context type
 type PrestationContextType = {
   prestations: Prestation[];
-  addPrestation: (prestation: Prestation) => Promise<Prestation | null>;
+  isLoading: boolean;
+  AddPrestation: (prestation: Prestation) => Promise<Prestation | null>;
   removePrestation: (id: number) => Promise<boolean>;
   updatePrestation: (prestation: Prestation) => Promise<Prestation | null>;
 };
@@ -27,8 +28,10 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [prestations, setPrestations] = useState<Prestation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const addPrestation = async (prestation: Prestation) => {
+  const AddPrestation = async (prestation: Prestation) => {
+    setIsLoading(true);
     try {
       const response = await fetch("/api/prestation", {
         method: "POST",
@@ -40,21 +43,25 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
+      } else {
+        const newPrestation = await response.json();
+        const typedPrestation = newPrestation.prestation as Prestation;
+        setPrestations((prevPrestations) => [
+          ...prevPrestations,
+          typedPrestation,
+        ]);
+        return newPrestation.prestation;
       }
-
-      const newPrestation = await response.json();
-      setPrestations((prevPrestations) => [
-        ...prevPrestations,
-        newPrestation.prestation,
-      ]);
-      return newPrestation.prestation;
     } catch (error) {
       console.error("Error adding prestation:", error);
       return null;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const removePrestation = async (id: number) => {
+    setIsLoading(true);
     try {
       const response = await fetch(`/api/prestation/${id}`, {
         method: "DELETE",
@@ -71,10 +78,13 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
     } catch (error) {
       console.error("Error removing prestation:", error);
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const updatePrestation = async (updatedPrestation: Prestation) => {
+    setIsLoading(true);
     try {
       // Validate that the prestation has an ID
       if (!updatedPrestation.id) {
@@ -109,6 +119,8 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
     } catch (error) {
       console.error("Error updating prestation:", error);
       return null;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -116,6 +128,7 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
     const controller = new AbortController();
 
     const fetchPrestations = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch("/api/prestation", {
           signal: controller.signal,
@@ -132,22 +145,24 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
           if (error.name !== "AbortError") {
             console.error("Error fetching prestations:", error.message);
           }
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchPrestations();
 
-    // Cleanup function to cancel ongoing fetch if component unmounts
     return () => {
       controller.abort();
     };
-  }, []);
+  }, [isLoading]);
 
   return (
     <PrestationContext.Provider
       value={{
         prestations,
-        addPrestation,
+        isLoading,
+        AddPrestation,
         removePrestation,
         updatePrestation,
       }}

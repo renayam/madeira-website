@@ -1,12 +1,12 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { useState, ChangeEvent } from "react";
 import Image from "next/image";
 import { usePrestationContext } from "../../../../components/PrestationContext";
-import { Prestation } from "@/types/prestation";
+import { Prestation, PrestationCreate } from "@/types/prestation";
 
-export default function PrestationCreate() {
-  const [pr, setPr] = useState<Prestation>({
+export default function PrestationCreateScreen() {
+  const [pr, setPr] = useState<PrestationCreate>({
     name: "",
     bannerImage: "",
     otherImage: "",
@@ -18,7 +18,7 @@ export default function PrestationCreate() {
     null,
   );
 
-  const { prestations, addPrestation, removePrestation, updatePrestation } =
+  const { prestations, AddPrestation, removePrestation, updatePrestation } =
     usePrestationContext();
 
   const convertToBase64 = (file: File): Promise<string> => {
@@ -31,29 +31,29 @@ export default function PrestationCreate() {
   };
 
   const handleBannerImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      try {
-        const base64 = await convertToBase64(file);
-        setPr({ ...pr, bannerImage: base64 });
-      } catch (error) {
-        console.error("Error uploading banner image:", error);
-        alert("Erreur lors du téléchargement de l'image de bannière");
-      }
-    }
+    // const file = e.target.files?.[0];
+    // if (file) {
+    //   try {
+    //     const base64 = await convertToBase64(file);
+    //     setPr({ ...pr, bannerImage: base64 });
+    //   } catch (error) {
+    //     console.error("Error uploading banner image:", error);
+    //     alert("Erreur lors du téléchargement de l'image de bannière");
+    //   }
+    // }
   };
 
   const handleOtherImagesUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      try {
-        const base64Images = await convertToBase64(files[0]);
-        setPr({ ...pr, otherImage: base64Images });
-      } catch (error) {
-        console.error("Error uploading other images:", error);
-        alert("Erreur lors du téléchargement des images");
-      }
-    }
+    // const files = e.target.files;
+    // if (files) {
+    //   try {
+    //     const base64Images = await convertToBase64(files[0]);
+    //     setPr({ ...pr, otherImage: base64Images });
+    //   } catch (error) {
+    //     console.error("Error uploading other images:", error);
+    //     alert("Erreur lors du téléchargement des images");
+    //   }
+    // }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -84,7 +84,7 @@ export default function PrestationCreate() {
         }
       } else {
         // Add new prestation
-        const newPrestation = await addPrestation(pr);
+        const newPrestation = await AddPrestation(pr);
 
         if (newPrestation) {
           setPr({
@@ -178,7 +178,7 @@ export default function PrestationCreate() {
                   className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-800 p-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </label>
-              {pr.otherImage && (
+              {pr?.otherImage && (
                 <div className="mt-2 flex justify-center">
                   <Image
                     src={pr.otherImage}
@@ -225,55 +225,80 @@ export default function PrestationCreate() {
         </div>
       </div>
 
-      {/* Prestation List */}
       <div className="w-1/3 bg-gray-900 p-6">
         <h2 className="mb-4 text-xl font-bold text-white">
           Liste des Prestations
         </h2>
-        {prestations?.length === 0 ? (
-          <p className="text-gray-400">Aucune prestation créée</p>
-        ) : (
-          <div className="space-y-4">
-            {prestations?.map((prestation) => (
-              <div
-                key={prestation.id}
-                className="flex items-center justify-between rounded-lg bg-gray-800 p-4"
-              >
-                <div className="flex items-center space-x-4">
-                  {prestation.bannerImage && (
-                    <Image
-                      src={prestation.bannerImage}
-                      alt={prestation.name}
-                      width={50}
-                      height={50}
-                      className="rounded-md object-cover"
-                    />
-                  )}
-                  <div>
-                    <h3 className="font-semibold text-white">
-                      {prestation.name}
-                    </h3>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => startEditing(prestation)}
-                    className="text-blue-500 transition hover:text-blue-700"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    onClick={() => removePrestation(prestation?.id as number)}
-                    className="text-red-500 transition hover:text-red-700"
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <PrestationList startEditing={startEditing} />
       </div>
     </div>
+  );
+}
+
+
+function PrestationList({ startEditing }: { startEditing: (prestation: Prestation) => void }) {
+
+  const { prestations, removePrestation, isLoading } =
+    usePrestationContext();
+
+  if (isLoading) {
+    return <p className="text-gray-400">Chargement des prestations...</p>;
+  }
+
+  if (prestations.length === 0 || !prestations) {
+    return <p className="text-gray-400">Aucune prestation créée</p>;
+  }
+
+  useEffect(() => {
+    console.log("update the data");
+  }, [prestations, isLoading]);
+
+  return (
+    <>
+      {prestations.length === 0 ? (
+        <p className="text-gray-400">Aucune prestation créée</p>
+      ) : (
+        <>
+          {prestations.map((prestation) => (
+            prestation && (
+            <div
+              key={prestation.id}
+              className="flex items-center justify-between rounded-lg bg-gray-800 p-4 space-y-4"
+            >
+              <div className="flex items-center space-x-4">
+                {prestation?.bannerImage && (
+                  <Image
+                    src={prestation.bannerImage}
+                    alt={prestation.name}
+                    width={50}
+                    height={50}
+                    className="rounded-md object-cover"
+                  />
+                )}
+                <div>
+                  <h3 className="font-semibold text-white">
+                    {prestation.name}
+                  </h3>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => startEditing(prestation)}
+                  className="text-blue-500 transition hover:text-blue-700"
+                >
+                  ✏️
+                </button>
+                <button
+                  onClick={() => removePrestation(prestation.id as number)}
+                  className="text-red-500 transition hover:text-red-700"
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+            )))}
+        </>
+      )}
+    </>
   );
 }

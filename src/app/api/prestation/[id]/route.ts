@@ -30,6 +30,8 @@ export async function DELETE(
     }
 
     // Find the prestation
+    const con = DatabaseService.getInstance();
+    await PrestationModel.initialize(con);
     const prestation = await PrestationModel.findByPk(id);
 
     // Check if prestation exists

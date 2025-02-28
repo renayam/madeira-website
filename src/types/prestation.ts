@@ -2,12 +2,14 @@ import { DatabaseService } from "../service/storage";
 import { DataTypes, Model, ModelAttributes, InitOptions } from "sequelize";
 
 export type Prestation = {
-  id?: number;
+  id: number;
   name: string;
-  bannerImage?: string;
+  bannerImage: string;
   otherImage: string;
   description: string;
 };
+
+export type PrestationCreate = Omit<Prestation, "id">;
 
 export class PrestationModel extends Model<Prestation> {
   declare id: number;
