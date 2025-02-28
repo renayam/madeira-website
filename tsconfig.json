@@ -4,7 +4,7 @@
 		"esModuleInterop": true,
 		"moduleResolution": "node",
 		"types": [
-			"@types/aws-sdk"
+			"node"
 		],
 		"typeRoots": [
 			"./node_modules/@types"
