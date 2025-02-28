@@ -2,7 +2,8 @@
 import Image from "next/image";
 import React, { useState } from "react";
 import useImageExpand from "@/hook/useImageExpand";
-import { usePortfolio, PortfolioItem } from "@/components/PortfolioContext";
+import { usePortfolio } from "@/components/PortfolioContext";
+import { PortfolioItem } from "@/types/portfolio";
 
 type Data = {
   title: string;
@@ -13,8 +14,7 @@ type Data = {
 };
 
 const ManagePortfolio: React.FC = () => {
-  const { addPortfolioItem, portfolioItems, deletePortfolioItem } =
-    usePortfolio();
+  const { addPortfolioItem } = usePortfolio();
   const [data, setData] = useState<Data>({
     title: "",
     description: "",
@@ -81,7 +81,7 @@ const ManagePortfolio: React.FC = () => {
       gallery: [],
       altText: "",
     });
-    alert("Portfolio créé avec succès !");
+    // alert("Portfolio créé avec succès !");
   };
 
   return (
@@ -130,10 +130,10 @@ const ManagePortfolio: React.FC = () => {
                   className="mt-1 block w-full cursor-pointer rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
                 />
               </label>
-              {data.mainImage && (
+              {data?.mainImage && (
                 <div className="relative mt-2">
                   <Image
-                    src={data.mainImage}
+                    src={data?.mainImage}
                     alt="Aperçu de l'Image Principale"
                     width={600}
                     height={400}
@@ -206,66 +206,91 @@ const ManagePortfolio: React.FC = () => {
             </button>
           </form>
         </div>
-
-        {/* Liste des portfolios */}
-        <div className="w-1/3 overflow-y-auto rounded-lg bg-gray-950 p-6 shadow-md">
-          <h2 className="mb-6 text-2xl font-bold">Portfolios Existants</h2>
-          {portfolioItems.length === 0 ? (
-            <p className="text-gray-400">Aucun portfolio créé</p>
-          ) : (
-            portfolioItems.map((item) => (
-              <div
-                key={item.id}
-                className="mb-4 flex rounded-lg bg-gray-900 shadow-md"
-              >
-                <div className="w-1/3">
-                  <Image
-                    src={item.mainImage}
-                    alt={item.altText}
-                    width={150}
-                    height={100}
-                    className="object-cover"
-                  />
-                </div>
-                <div className="w-2/3 p-3">
-                  <h3 className="mb-1 text-lg font-semibold">{item.title}</h3>
-                  <p className="mb-2 line-clamp-2 text-sm text-gray-400">
-                    {item.description}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">
-                      {item.gallery.length} images
-                    </span>
-                    <button
-                      onClick={() => deletePortfolioItem(item.id)}
-                      className="text-sm text-red-500 hover:text-red-600"
-                    >
-                      Supprimer
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        <PortfolioList />
+        {expandedImage && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+            onClick={closeImage}
+          >
+            <Image
+              src={expandedImage}
+              alt="Image Agrandie"
+              width={800}
+              height={600}
+              className="h-auto max-h-full w-auto max-w-full"
+            />
+          </div>
+        )}
       </div>
+    </div>
+  );
+};
 
-      {expandedImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
-          onClick={closeImage}
-        >
-          <Image
-            src={expandedImage}
-            alt="Image Agrandie"
-            width={800}
-            height={600}
-            className="h-auto max-h-full w-auto max-w-full"
-          />
-        </div>
+const PortfolioList = () => {
+  const { portfolioItems } = usePortfolio();
+
+  if (portfolioItems.length === 0) {
+    return (
+      <div className="w-1/3 overflow-y-auto rounded-lg bg-gray-950 p-6 shadow-md">
+        <h2 className="mb-6 text-2xl font-bold">Portfolios Existants</h2>
+        <p className="text-gray-400">Aucun portfolio créé</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-1/3 overflow-y-auto rounded-lg bg-gray-950 p-6 shadow-md">
+      <h2 className="mb-6 text-2xl font-bold">Portfolios Existants</h2>
+      {portfolioItems.length === 0 ? (
+        <p className="text-gray-400">Aucun portfolio créé</p>
+      ) : (
+        portfolioItems.map((item) => (
+          <ViewPortfolio {...item} key={item.id} />
+        ))
       )}
     </div>
   );
 };
+
+function ViewPortfolio(item: PortfolioItem) {
+  const { deletePortfolioItem } = usePortfolio();
+  if (!item) {
+    return null;
+  }
+  if (!item.id) {
+    console.error("Item has no id");
+    return null;
+  }
+  return (
+    <div
+      key={item.id}
+      className="mb-4 flex rounded-lg bg-gray-900 shadow-md"
+    >
+      <div className="w-1/3">
+        <Image
+          src={item?.mainImage}
+          alt={item?.altText}
+          width={150}
+          height={100}
+          className="object-cover"
+        />
+      </div>
+      <div className="w-2/3 p-3">
+        <h3 className="mb-1 text-lg font-semibold">{item.title}</h3>
+        <p className="mb-2 line-clamp-2 text-sm text-gray-400">
+          {item.description}
+        </p>
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => deletePortfolioItem(item.id)}
+            className="text-sm text-red-500 hover:text-red-600"
+          >
+            Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default ManagePortfolio;

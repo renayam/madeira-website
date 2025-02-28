@@ -67,6 +67,3 @@ export class PrestationModel extends Model<Prestation> {
     }
   }
 }
-
-// PrestationModel.initialize();
-// PrestationModel.sync();

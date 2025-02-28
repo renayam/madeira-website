@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useState, useContext, ReactNode } from "react";
+import { PortfolioItem } from "@/types/portfolio";
 
 // Define the context type
 interface PortfolioContextType {
@@ -28,13 +29,13 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({
       title: "Moderne",
       description: "Une salle de bain au design contemporain et épuré.",
       mainImage: "/images/20241121_150006.jpg",
-      gallery: [
-        "/images/20241121_150006.jpg",
-        "/images/20241121_150012.jpg",
-        "/images/20241121_150017.jpg",
-        "/images/20241121_150028.jpg",
-        "/images/20241121_150043.jpg",
-      ],
+      // gallery: [
+      //   "/images/20241121_150006.jpg",
+      //   "/images/20241121_150012.jpg",
+      //   "/images/20241121_150017.jpg",
+      //   "/images/20241121_150028.jpg",
+      //   "/images/20241121_150043.jpg",
+      // ],
       altText: "Salle de bain rénovée par Madeira.€co à Ballancourt",
     },
     {
@@ -42,13 +43,13 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({
       title: "Classique",
       description: "Un style intemporel pour une salle de bain chaleureuse.",
       mainImage: "/images/20231010_140727.jpg",
-      gallery: [
-        "/images/20231010_140727.jpg",
-        "/images/20231010_140738.jpg",
-        "/images/20231010_140754.jpg",
-        "/images/20231010_140807.jpg",
-        "/images/20231010_140833.jpg",
-      ],
+      // gallery: [
+      //   "/images/20231010_140727.jpg",
+      //   "/images/20231010_140738.jpg",
+      //   "/images/20231010_140754.jpg",
+      //   "/images/20231010_140807.jpg",
+      //   "/images/20231010_140833.jpg",
+      // ],
       altText: "Salle de bain classique rénovée par Madeira.€co à Ballancourt",
     },
     {
@@ -56,18 +57,33 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({
       title: "Minimaliste",
       description: "Un espace fonctionnel avec des lignes épurées.",
       mainImage: "/images/20231204_143732.jpg",
-      gallery: [
-        "/images/20231204_143732.jpg",
-        "/images/20231204_143745.jpg",
-        "/images/20231204_143759.jpg",
-      ],
+      // gallery: [
+      //   "/images/20231204_143732.jpg",
+      //   "/images/20231204_143745.jpg",
+      //   "/images/20231204_143759.jpg",
+      // ],
       altText:
         "Salle de bain minimaliste rénovée par Madeira.€co à Ballancourt",
     },
   ]);
 
-  const addPortfolioItem = (item: PortfolioItem) => {
-    setPortfolioItems((prevItems) => [...prevItems, item]);
+  const addPortfolioItem = async (item: PortfolioItem) => {
+    const res = await fetch("/api/portfolio", {
+      method: "POST",
+      body: JSON.stringify(item),
+    });
+
+    if (!res.ok) {
+      console.error("Failed to add portfolio item");
+      console.error(res);
+      return null;
+    }
+
+    const data = await res.json();
+    console.log("data", data);
+    const typedItem = data as PortfolioItem;
+    console.log(typedItem);
+    setPortfolioItems((prevItems) => [...prevItems, typedItem]);
   };
 
   const updatePortfolioItem = (

@@ -6,21 +6,23 @@ export interface PortfolioItem {
   title: string;
   description: string;
   mainImage: string;
-  gallery: string;
+  // gallery: string[];
   altText: string;
 }
+
+export type PortfolioItemCreate = Omit<PortfolioItem, "id">;
 
 export class PortfolioItemModel extends Model<PortfolioItem> {
   declare id: number;
   declare title: string;
   declare description: string;
   declare mainImage: string;
-  declare gallery: string[];
+  // declare gallery: string[];
   declare altText: string;
   declare created_at: Date;
   declare updated_at: Date;
 
-  static initialize(db: DatabaseService) {
+  static async initialize(db: DatabaseService) {
     const sequelize = db.connection;
 
     const modelAttributes: ModelAttributes<PortfolioItemModel, PortfolioItem> =
@@ -43,10 +45,10 @@ export class PortfolioItemModel extends Model<PortfolioItem> {
           allowNull: false,
           field: "main_image",
         },
-        gallery: {
-          type: DataTypes.STRING,
-          allowNull: true,
-        },
+        // gallery: {
+        //   type: DataTypes.ARRAY(DataTypes.STRING),
+        //   allowNull: true,
+        // },
         altText: {
           type: DataTypes.STRING,
           allowNull: true,
@@ -61,6 +63,16 @@ export class PortfolioItemModel extends Model<PortfolioItem> {
       underscored: true,
     };
 
-    return this.init(modelAttributes, options);
+    try {
+      await sequelize.authenticate();
+
+      const model = this.init(modelAttributes, options);
+
+      await model.sync();
+
+      return model;
+    } catch (error) {
+      throw error;
+    }
   }
 }
