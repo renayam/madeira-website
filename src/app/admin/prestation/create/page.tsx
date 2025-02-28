@@ -84,7 +84,10 @@ export default function PrestationCreateScreen() {
         }
       } else {
         // Add new prestation
-        const newPrestation = await AddPrestation(pr);
+        const newPrestation = await AddPrestation({
+          ...pr,
+          id: 0,
+        });
 
         if (newPrestation) {
           setPr({

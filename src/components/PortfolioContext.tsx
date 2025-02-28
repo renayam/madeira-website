@@ -86,15 +86,33 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({
     setPortfolioItems((prevItems) => [...prevItems, typedItem]);
   };
 
-  const updatePortfolioItem = (
+  const updatePortfolioItem = async (
     id: number,
     updatedItem: Partial<PortfolioItem>,
   ) => {
-    setPortfolioItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id ? { ...item, ...updatedItem } : item,
-      ),
-    );
+    try {
+      const res = await fetch(`/api/portfolio/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedItem),
+      });
+
+      if (!res.ok) {
+        console.error("Failed to update portfolio item");
+        return;
+      }
+
+      const updatedData = await res.json();
+      setPortfolioItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === id ? updatedData : item
+        ),
+      );
+    } catch (error) {
+      console.error("Error updating portfolio item:", error);
+    }
   };
 
   const deletePortfolioItem = async (id: number) => {

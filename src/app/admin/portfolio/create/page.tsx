@@ -9,21 +9,20 @@ type Data = {
   title: string;
   description: string;
   mainImage: string | null;
-  gallery: string[];
   altText: string;
 };
 
 const ManagePortfolio: React.FC = () => {
-  const { addPortfolioItem } = usePortfolio();
+  const { addPortfolioItem, updatePortfolioItem } = usePortfolio();
   const [data, setData] = useState<Data>({
     title: "",
     description: "",
     mainImage: null,
-    gallery: [],
     altText: "",
   });
+  const [editingPortfolio, setEditingPortfolio] = useState<PortfolioItem | null>(null);
 
-  const { expandedImage, openImage, closeImage } = useImageExpand();
+  const { expandedImage, closeImage } = useImageExpand();
 
   const handleMainImageChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -34,54 +33,59 @@ const ManagePortfolio: React.FC = () => {
     }
   };
 
-  const handleGalleryImageChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const files = event.target.files;
-    if (files) {
-      const newImages = Array.from(files).map((file) =>
-        URL.createObjectURL(file),
-      );
-      setData((prev) => ({
-        ...prev,
-        gallery: [...prev.gallery, ...newImages],
-      }));
-    }
-  };
-
-  const handleDeleteGalleryImage = (index: number) => {
-    setData((prev) => ({
-      ...prev,
-      gallery: prev.gallery.filter((_, i) => i !== index),
-    }));
-  };
-
   const handleDeleteMainImage = () =>
     setData((prev) => ({ ...prev, mainImage: null }));
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!data.mainImage || data.gallery.length === 0) {
-      alert(
-        "Une image principale et au moins une image de galerie sont requises.",
-      );
+    if (!data.mainImage) {
+      alert("Une image principale est requise.");
       return;
     }
 
-    const newPortfolioItem: PortfolioItem = {
-      id: Date.now(),
-      ...data,
-    } as PortfolioItem;
+    try {
+      const portfolioData: PortfolioItem = {
+        id: editingPortfolio ? editingPortfolio.id : Date.now(),
+        ...data,
+      } as PortfolioItem;
 
-    addPortfolioItem(newPortfolioItem);
+      if (editingPortfolio) {
+        await updatePortfolioItem(editingPortfolio.id, portfolioData);
+        setEditingPortfolio(null);
+      } else {
+        await addPortfolioItem(portfolioData);
+      }
+
+      setData({
+        title: "",
+        description: "",
+        mainImage: null,
+        altText: "",
+      });
+    } catch (error) {
+      console.error("Error submitting portfolio:", error);
+      alert("Une erreur s'est produite lors de la sauvegarde du portfolio.");
+    }
+  };
+
+  const startEditing = (portfolio: PortfolioItem) => {
+    setEditingPortfolio(portfolio);
+    setData({
+      title: portfolio.title,
+      description: portfolio.description,
+      mainImage: portfolio.mainImage,
+      altText: portfolio.altText,
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingPortfolio(null);
     setData({
       title: "",
       description: "",
       mainImage: null,
-      gallery: [],
       altText: "",
     });
-    // alert("Portfolio créé avec succès !");
   };
 
   return (
@@ -89,7 +93,9 @@ const ManagePortfolio: React.FC = () => {
       <div className="flex w-full space-x-6">
         {/* Formulaire de création */}
         <div className="w-2/3 rounded-lg bg-gray-950 p-6 shadow-md">
-          <h1 className="mb-4 text-2xl font-bold">Créer un Portfolio</h1>
+          <h1 className="mb-4 text-2xl font-bold">
+            {editingPortfolio ? "Modifier le Portfolio" : "Créer un Portfolio"}
+          </h1>
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">
@@ -126,14 +132,14 @@ const ManagePortfolio: React.FC = () => {
                   type="file"
                   accept="image/*"
                   onChange={handleMainImageChange}
-                  required
+                  required={!editingPortfolio}
                   className="mt-1 block w-full cursor-pointer rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
                 />
               </label>
               {data?.mainImage && (
                 <div className="relative mt-2">
                   <Image
-                    src={data?.mainImage}
+                    src={data.mainImage}
                     alt="Aperçu de l'Image Principale"
                     width={600}
                     height={400}
@@ -151,39 +157,6 @@ const ManagePortfolio: React.FC = () => {
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">
-                Galerie d&apos;Images :
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleGalleryImageChange}
-                  multiple
-                  className="mt-1 block w-full cursor-pointer rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
-                />
-              </label>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {data.gallery.map((image, index) => (
-                  <div key={index} className="relative h-24 w-24">
-                    <Image
-                      src={image}
-                      alt={`Image ${index + 1}`}
-                      width={96}
-                      height={96}
-                      className="rounded-md object-cover"
-                      onClick={() => openImage(image)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteGalleryImage(index)}
-                      className="absolute right-1 top-1 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
-                    >
-                      X
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">
                 Description :
                 <textarea
                   value={data.description}
@@ -198,15 +171,26 @@ const ManagePortfolio: React.FC = () => {
                 />
               </label>
             </div>
-            <button
-              type="submit"
-              className="mt-4 w-full rounded-md bg-blue-600 py-2 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
-            >
-              Créer un Portfolio
-            </button>
+            <div className="flex space-x-4">
+              <button
+                type="submit"
+                className="mt-4 w-full rounded-md bg-blue-600 py-2 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
+              >
+                {editingPortfolio ? "Mettre à jour" : "Créer un Portfolio"}
+              </button>
+              {editingPortfolio && (
+                <button
+                  type="button"
+                  onClick={cancelEditing}
+                  className="mt-4 w-full rounded-md bg-gray-600 py-2 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-500"
+                >
+                  Annuler
+                </button>
+              )}
+            </div>
           </form>
         </div>
-        <PortfolioList />
+        <PortfolioList onEdit={startEditing} />
         {expandedImage && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
@@ -226,7 +210,7 @@ const ManagePortfolio: React.FC = () => {
   );
 };
 
-const PortfolioList = () => {
+const PortfolioList = ({ onEdit }: { onEdit: (portfolio: PortfolioItem) => void }) => {
   const { portfolioItems } = usePortfolio();
 
   if (portfolioItems.length === 0) {
@@ -241,35 +225,23 @@ const PortfolioList = () => {
   return (
     <div className="w-1/3 overflow-y-auto rounded-lg bg-gray-950 p-6 shadow-md">
       <h2 className="mb-6 text-2xl font-bold">Portfolios Existants</h2>
-      {portfolioItems.length === 0 ? (
-        <p className="text-gray-400">Aucun portfolio créé</p>
-      ) : (
-        portfolioItems.map((item) => (
-          <ViewPortfolio {...item} key={item.id} />
-        ))
-      )}
+      {portfolioItems.map((item) => (
+        <ViewPortfolio key={item.id} item={item} onEdit={onEdit} />
+      ))}
     </div>
   );
 };
 
-function ViewPortfolio(item: PortfolioItem) {
+function ViewPortfolio({ item, onEdit }: { item: PortfolioItem; onEdit: (portfolio: PortfolioItem) => void }) {
   const { deletePortfolioItem } = usePortfolio();
-  if (!item) {
-    return null;
-  }
-  if (!item.id) {
-    console.error("Item has no id");
-    return null;
-  }
+  if (!item || !item.id) return null;
+
   return (
-    <div
-      key={item.id}
-      className="mb-4 flex rounded-lg bg-gray-900 shadow-md"
-    >
+    <div className="mb-4 flex rounded-lg bg-gray-900 shadow-md">
       <div className="w-1/3">
         <Image
-          src={item?.mainImage}
-          alt={item?.altText}
+          src={item.mainImage}
+          alt={item.altText}
           width={150}
           height={100}
           className="object-cover"
@@ -281,6 +253,12 @@ function ViewPortfolio(item: PortfolioItem) {
           {item.description}
         </p>
         <div className="flex items-center justify-between">
+          <button
+            onClick={() => onEdit(item)}
+            className="text-blue-500 transition hover:text-blue-700"
+          >
+            ✏️
+          </button>
           <button
             onClick={() => deletePortfolioItem(item.id)}
             className="text-sm text-red-500 hover:text-red-600"
