@@ -2,8 +2,11 @@ import { DatabaseService } from "../../../../service/storage.server";
 import { PortfolioItemModel } from "@/types/portfolio";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-    const { id } = params;
+export async function DELETE(
+    request: NextRequest,
+    context: { params: { id: string } }
+) {
+    const { id } = context.params;
     const instance = await DatabaseService.getInstance();
     await PortfolioItemModel.initialize(instance);
     const portfolioItem = await PortfolioItemModel.findByPk(id);
