@@ -10,6 +10,7 @@ type Data = {
   description: string;
   mainImage: string | null;
   altText: string;
+  mainImageFile?: File | null;
 };
 
 const ManagePortfolio: React.FC = () => {
@@ -19,49 +20,65 @@ const ManagePortfolio: React.FC = () => {
     description: "",
     mainImage: null,
     altText: "",
+    mainImageFile: null,
   });
   const [editingPortfolio, setEditingPortfolio] = useState<PortfolioItem | null>(null);
 
   const { expandedImage, closeImage } = useImageExpand();
 
-  const handleMainImageChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleMainImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setData((prev) => ({ ...prev, mainImage: URL.createObjectURL(file) }));
+      setData((prev) => ({
+        ...prev,
+        mainImage: URL.createObjectURL(file),
+        mainImageFile: file,
+      }));
     }
   };
 
   const handleDeleteMainImage = () =>
-    setData((prev) => ({ ...prev, mainImage: null }));
+    setData((prev) => ({ ...prev, mainImage: null, mainImageFile: null }));
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!data.mainImage) {
-      alert("Une image principale est requise.");
+    if (!data.title) {
+      alert("Le titre est requis.");
       return;
     }
 
     try {
-      const portfolioData: PortfolioItem = {
-        id: editingPortfolio ? editingPortfolio.id : Date.now(),
-        ...data,
-      } as PortfolioItem;
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("description", data.description);
+      formData.append("altText", data.altText);
 
-      if (editingPortfolio) {
-        await updatePortfolioItem(editingPortfolio.id, portfolioData);
-        setEditingPortfolio(null);
-      } else {
-        await addPortfolioItem(portfolioData);
+      // Only append file if it exists
+      if (data.mainImageFile instanceof File) {
+        console.log("Appending main image:", data.mainImageFile.name);
+        formData.append("mainImage", data.mainImageFile);
       }
 
-      setData({
-        title: "",
-        description: "",
-        mainImage: null,
-        altText: "",
-      });
+      let result;
+      if (editingPortfolio && editingPortfolio.id) {
+        console.log("Updating portfolio item...");
+        result = await updatePortfolioItem(editingPortfolio.id, formData);
+      } else {
+        console.log("Creating new portfolio item...");
+        result = await addPortfolioItem(formData);
+      }
+
+      if (result) {
+        console.log("Portfolio operation successful:", result);
+        setEditingPortfolio(null);
+        setData({
+          title: "",
+          description: "",
+          mainImage: null,
+          altText: "",
+          mainImageFile: null,
+        });
+      }
     } catch (error) {
       console.error("Error submitting portfolio:", error);
       alert("Une erreur s'est produite lors de la sauvegarde du portfolio.");
@@ -75,6 +92,7 @@ const ManagePortfolio: React.FC = () => {
       description: portfolio.description,
       mainImage: portfolio.mainImage,
       altText: portfolio.altText,
+      mainImageFile: null,
     });
   };
 
@@ -85,6 +103,7 @@ const ManagePortfolio: React.FC = () => {
       description: "",
       mainImage: null,
       altText: "",
+      mainImageFile: null,
     });
   };
 
@@ -234,7 +253,9 @@ const PortfolioList = ({ onEdit }: { onEdit: (portfolio: PortfolioItem) => void 
 
 function ViewPortfolio({ item, onEdit }: { item: PortfolioItem; onEdit: (portfolio: PortfolioItem) => void }) {
   const { deletePortfolioItem } = usePortfolio();
-  if (!item || !item.id) return null;
+
+  // Ensure item has an id before rendering
+  if (!item || typeof item.id !== 'number') return null;
 
   return (
     <div className="mb-4 flex rounded-lg bg-gray-900 shadow-md">

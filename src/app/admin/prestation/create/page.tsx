@@ -21,39 +21,36 @@ export default function PrestationCreateScreen() {
   const { AddPrestation, updatePrestation } =
     usePrestationContext();
 
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
   const handleBannerImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    // const file = e.target.files?.[0];
-    // if (file) {
-    //   try {
-    //     const base64 = await convertToBase64(file);
-    //     setPr({ ...pr, bannerImage: base64 });
-    //   } catch (error) {
-    //     console.error("Error uploading banner image:", error);
-    //     alert("Erreur lors du téléchargement de l'image de bannière");
-    //   }
-    // }
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        setPr({
+          ...pr,
+          bannerImage: URL.createObjectURL(file),
+          bannerImageFile: file
+        });
+      } catch (error) {
+        console.error("Error uploading banner image:", error);
+        alert("Erreur lors du téléchargement de l'image de bannière");
+      }
+    }
   };
 
   const handleOtherImagesUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    // const files = e.target.files;
-    // if (files) {
-    //   try {
-    //     const base64Images = await convertToBase64(files[0]);
-    //     setPr({ ...pr, otherImage: base64Images });
-    //   } catch (error) {
-    //     console.error("Error uploading other images:", error);
-    //     alert("Erreur lors du téléchargement des images");
-    //   }
-    // }
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        setPr({
+          ...pr,
+          otherImage: URL.createObjectURL(file),
+          otherImageFile: file
+        });
+      } catch (error) {
+        console.error("Error uploading other images:", error);
+        alert("Erreur lors du téléchargement des images");
+      }
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -65,36 +62,51 @@ export default function PrestationCreateScreen() {
     }
 
     try {
-      if (editingPrestation) {
-        // Update existing prestation
-        const updatedPrestation = await updatePrestation({
-          ...pr,
-          id: editingPrestation.id,
-        });
+      const formData = new FormData();
+      formData.append("name", pr.name);
+      formData.append("description", pr.description);
+
+      // Only append files if they exist
+      if (pr.bannerImageFile instanceof File) {
+        console.log("Appending banner image:", pr.bannerImageFile.name);
+        formData.append("bannerImage", pr.bannerImageFile);
+      }
+
+      if (pr.otherImageFile instanceof File) {
+        console.log("Appending other image:", pr.otherImageFile.name);
+        formData.append("otherImage", pr.otherImageFile);
+      }
+
+      if (editingPrestation && editingPrestation.id) {
+        formData.append("id", editingPrestation.id.toString());
+        console.log("Updating prestation...");
+        const updatedPrestation = await updatePrestation(formData);
 
         if (updatedPrestation) {
-          // Reset form and editing state
+          console.log("Prestation updated successfully:", updatedPrestation);
           setEditingPrestation(null);
           setPr({
             name: "",
             bannerImage: "",
             otherImage: "",
             description: "",
+            bannerImageFile: null,
+            otherImageFile: null,
           });
         }
       } else {
-        // Add new prestation
-        const newPrestation = await AddPrestation({
-          ...pr,
-          id: 0,
-        });
+        console.log("Creating new prestation...");
+        const newPrestation = await AddPrestation(formData);
 
         if (newPrestation) {
+          console.log("Prestation created successfully:", newPrestation);
           setPr({
             name: "",
             bannerImage: "",
             otherImage: "",
             description: "",
+            bannerImageFile: null,
+            otherImageFile: null,
           });
         }
       }
@@ -240,9 +252,11 @@ export default function PrestationCreateScreen() {
 
 
 function PrestationList({ startEditing }: { startEditing: (prestation: Prestation) => void }) {
+  const { prestations, removePrestation, isLoading } = usePrestationContext();
 
-  const { prestations, removePrestation, isLoading } =
-    usePrestationContext();
+  useEffect(() => {
+    console.log("update the data");
+  }, [prestations, isLoading]);
 
   if (isLoading) {
     return <p className="text-gray-400">Chargement des prestations...</p>;
@@ -251,10 +265,6 @@ function PrestationList({ startEditing }: { startEditing: (prestation: Prestatio
   if (prestations.length === 0 || !prestations) {
     return <p className="text-gray-400">Aucune prestation créée</p>;
   }
-
-  useEffect(() => {
-    console.log("update the data");
-  }, [prestations, isLoading]);
 
   return (
     <>

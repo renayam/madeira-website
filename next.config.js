@@ -1,14 +1,25 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   webpack: (config, { isServer }) => {
     if (!isServer) {
-      // Ne pas inclure les modules Sequelize côté client
+      // Don't bundle sequelize for client-side
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
         net: false,
         tls: false,
+        dns: false,
+        'pg-hstore': false,
+        tedious: false,
+        nock: false,
+        'aws-sdk': false,
+        'mock-aws-s3': false,
+        'mysql2': false,
+        sqlite3: false,
+        'pg-native': false,
+        '@sequelize/core': false,
+        sequelize: false,
+        mariadb: false,
       };
     }
     return config;
@@ -26,10 +37,8 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
-    serverComponentsExternalPackages: ["sequelize", "sequelize-typescript"],
+    serverComponentsExternalPackages: ['sequelize', 'mariadb'],
   },
-};
+}
 
-export default nextConfig;
-
-
+module.exports = nextConfig

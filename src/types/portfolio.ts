@@ -1,4 +1,4 @@
-import { DatabaseService } from "../service/storage";
+import { DatabaseService } from "@/service/storage.server";
 import { DataTypes, Model, ModelAttributes, InitOptions } from "sequelize";
 
 export interface PortfolioItem {
@@ -26,35 +26,35 @@ export class PortfolioItemModel extends Model<PortfolioItem> {
     const sequelize = db.connection;
 
     const modelAttributes: ModelAttributes<PortfolioItemModel, PortfolioItem> =
-      {
-        id: {
-          type: DataTypes.INTEGER,
-          primaryKey: true,
-          autoIncrement: true,
-        },
-        title: {
-          type: DataTypes.STRING,
-          allowNull: false,
-        },
-        description: {
-          type: DataTypes.TEXT,
-          allowNull: true,
-        },
-        mainImage: {
-          type: DataTypes.STRING,
-          allowNull: false,
-          field: "main_image",
-        },
-        // gallery: {
-        //   type: DataTypes.ARRAY(DataTypes.STRING),
-        //   allowNull: true,
-        // },
-        altText: {
-          type: DataTypes.STRING,
-          allowNull: true,
-          field: "alt_text",
-        },
-      };
+    {
+      id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      title: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      description: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      mainImage: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        field: "main_image",
+      },
+      // gallery: {
+      //   type: DataTypes.ARRAY(DataTypes.STRING),
+      //   allowNull: true,
+      // },
+      altText: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        field: "alt_text",
+      },
+    };
 
     const options: InitOptions<PortfolioItemModel> = {
       sequelize,
@@ -68,7 +68,7 @@ export class PortfolioItemModel extends Model<PortfolioItem> {
 
       const model = this.init(modelAttributes, options);
 
-      await model.sync();
+      await model.sync({ alter: true });
 
       return model;
     } catch (error) {

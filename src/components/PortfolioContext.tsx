@@ -6,11 +6,8 @@ import { PortfolioItem } from "@/types/portfolio";
 // Define the context type
 interface PortfolioContextType {
   portfolioItems: PortfolioItem[];
-  addPortfolioItem: (item: PortfolioItem) => void;
-  updatePortfolioItem: (
-    id: number,
-    updatedItem: Partial<PortfolioItem>,
-  ) => void;
+  addPortfolioItem: (formData: FormData) => Promise<PortfolioItem | null>;
+  updatePortfolioItem: (id: number, formData: FormData) => Promise<PortfolioItem | null>;
   deletePortfolioItem: (id: number) => void;
 }
 
@@ -67,73 +64,86 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({
     },
   ]);
 
-  const addPortfolioItem = async (item: PortfolioItem) => {
-    const res = await fetch("/api/portfolio", {
-      method: "POST",
-      body: JSON.stringify(item),
-    });
+  const addPortfolioItem = async (formData: FormData): Promise<PortfolioItem | null> => {
+    try {
+      const res = await fetch("/api/portfolio", {
+        method: "POST",
+        body: formData,
+      });
 
-    if (!res.ok) {
-      console.error("Failed to add portfolio item");
-      console.error(res);
+      if (!res.ok) {
+        console.error("Failed to add portfolio item");
+        return null;
+      }
+
+      const data = await res.json();
+      const newItem = data as PortfolioItem;
+      setPortfolioItems((prevItems) => [...prevItems, newItem]);
+      return newItem;
+    } catch (error) {
+      console.error("Error adding portfolio item:", error);
       return null;
     }
-
-    const data = await res.json();
-    console.log("data", data);
-    const typedItem = data as PortfolioItem;
-    console.log(typedItem);
-    setPortfolioItems((prevItems) => [...prevItems, typedItem]);
   };
 
   const updatePortfolioItem = async (
     id: number,
-    updatedItem: Partial<PortfolioItem>,
-  ) => {
+    formData: FormData,
+  ): Promise<PortfolioItem | null> => {
     try {
+      formData.append("id", id.toString());
       const res = await fetch(`/api/portfolio/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedItem),
+        body: formData,
       });
 
       if (!res.ok) {
         console.error("Failed to update portfolio item");
-        return;
+        return null;
       }
 
       const updatedData = await res.json();
       setPortfolioItems((prevItems) =>
-        prevItems.map((item) =>
-          item.id === id ? updatedData : item
-        ),
+        prevItems.map((item) => (item.id === id ? updatedData : item)),
       );
+      return updatedData;
     } catch (error) {
       console.error("Error updating portfolio item:", error);
+      return null;
     }
   };
 
   const deletePortfolioItem = async (id: number) => {
-    const res = await fetch(`/api/portfolio/${id}`, {
-      method: "DELETE",
-    });
-    if (!res.ok) {
-      console.error("Failed to delete portfolio item");
-      return;
+    try {
+      const res = await fetch(`/api/portfolio/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        console.error("Failed to delete portfolio item");
+        return;
+      }
+      setPortfolioItems((prevItems) =>
+        prevItems.filter((item) => item.id !== id),
+      );
+    } catch (error) {
+      console.error("Error deleting portfolio item:", error);
     }
-    setPortfolioItems((prevItems) =>
-      prevItems.filter((item) => item.id !== id),
-    );
   };
 
   useEffect(() => {
     const fetchPortfolioItems = async () => {
-      const res = await fetch("/api/portfolio");
-      const data = await res.json();
-      setPortfolioItems(data);
+      try {
+        const res = await fetch("/api/portfolio");
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        setPortfolioItems(data);
+      } catch (error) {
+        console.error("Error fetching portfolio items:", error);
+      }
     };
+
     fetchPortfolioItems();
   }, []);
 

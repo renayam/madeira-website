@@ -3,6 +3,12 @@
 		"module": "commonjs",
 		"esModuleInterop": true,
 		"moduleResolution": "node",
+		"types": [
+			"@types/aws-sdk"
+		],
+		"typeRoots": [
+			"./node_modules/@types"
+		],
 		"target": "ES2017",
 		"lib": [
 			"dom",
