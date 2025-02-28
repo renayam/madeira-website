@@ -18,7 +18,7 @@ export default function PrestationCreateScreen() {
     null,
   );
 
-  const { prestations, AddPrestation, removePrestation, updatePrestation } =
+  const { AddPrestation, updatePrestation } =
     usePrestationContext();
 
   const convertToBase64 = (file: File): Promise<string> => {
@@ -261,41 +261,41 @@ function PrestationList({ startEditing }: { startEditing: (prestation: Prestatio
         <>
           {prestations.map((prestation) => (
             prestation && (
-            <div
-              key={prestation.id}
-              className="flex items-center justify-between rounded-lg bg-gray-800 p-4 space-y-4"
-            >
-              <div className="flex items-center space-x-4">
-                {prestation?.bannerImage && (
-                  <Image
-                    src={prestation.bannerImage}
-                    alt={prestation.name}
-                    width={50}
-                    height={50}
-                    className="rounded-md object-cover"
-                  />
-                )}
-                <div>
-                  <h3 className="font-semibold text-white">
-                    {prestation.name}
-                  </h3>
+              <div
+                key={prestation.id}
+                className="flex items-center justify-between rounded-lg bg-gray-800 p-4 space-y-4"
+              >
+                <div className="flex items-center space-x-4">
+                  {prestation?.bannerImage && (
+                    <Image
+                      src={prestation.bannerImage}
+                      alt={prestation.name}
+                      width={50}
+                      height={50}
+                      className="rounded-md object-cover"
+                    />
+                  )}
+                  <div>
+                    <h3 className="font-semibold text-white">
+                      {prestation.name}
+                    </h3>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => startEditing(prestation)}
+                    className="text-blue-500 transition hover:text-blue-700"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    onClick={() => removePrestation(prestation.id as number)}
+                    className="text-red-500 transition hover:text-red-700"
+                  >
+                    🗑️
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => startEditing(prestation)}
-                  className="text-blue-500 transition hover:text-blue-700"
-                >
-                  ✏️
-                </button>
-                <button
-                  onClick={() => removePrestation(prestation.id as number)}
-                  className="text-red-500 transition hover:text-red-700"
-                >
-                  🗑️
-                </button>
-              </div>
-            </div>
             )))}
         </>
       )}
