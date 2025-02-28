@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useState, useContext, ReactNode } from "react";
+import React, { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { PortfolioItem } from "@/types/portfolio";
 
 // Define the context type
@@ -102,6 +102,15 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({
       prevItems.filter((item) => item.id !== id),
     );
   };
+
+  useEffect(() => {
+    const fetchPortfolioItems = async () => {
+      const res = await fetch("/api/portfolio");
+      const data = await res.json();
+      setPortfolioItems(data);
+    };
+    fetchPortfolioItems();
+  }, []);
 
   return (
     <PortfolioContext.Provider

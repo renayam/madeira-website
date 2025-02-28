@@ -20,3 +20,19 @@ export async function POST(request: NextRequest) {
         );
     }
 }
+
+export async function GET() {
+    try {
+        const instance = await DatabaseService.getInstance();
+        await PortfolioItemModel.initialize(instance);
+        const portfolioItems = await PortfolioItemModel.findAll();
+
+        return NextResponse.json(portfolioItems);
+    } catch (error) {
+        console.error('Failed to get portfolio items:', error);
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : 'An unknown error occurred' },
+            { status: 500 }
+        );
+    }
+}
