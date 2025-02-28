@@ -97,7 +97,14 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({
     );
   };
 
-  const deletePortfolioItem = (id: number) => {
+  const deletePortfolioItem = async (id: number) => {
+    const res = await fetch(`/api/portfolio/${id}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      console.error("Failed to delete portfolio item");
+      return;
+    }
     setPortfolioItems((prevItems) =>
       prevItems.filter((item) => item.id !== id),
     );
