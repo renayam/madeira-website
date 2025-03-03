@@ -11,6 +11,7 @@ export default function PrestationCreateScreen() {
     bannerImage: "",
     otherImage: [],
     description: "",
+    deletedImages: [],
   });
 
   // State for tracking which prestation is being edited
@@ -18,7 +19,7 @@ export default function PrestationCreateScreen() {
     null,
   );
 
-  const { AddPrestation, updatePrestation } =
+  const { AddPrestation, updatePrestation, removeOtherImage } =
     usePrestationContext();
 
   const handleBannerImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -101,6 +102,13 @@ export default function PrestationCreateScreen() {
         const updatedPrestation = await updatePrestation(formData);
 
         if (updatedPrestation) {
+          // After successful update, delete the marked images
+          if (pr.deletedImages && pr.deletedImages.length > 0) {
+            for (const imageUrl of pr.deletedImages) {
+              await removeOtherImage(editingPrestation.id, imageUrl);
+            }
+          }
+
           console.log("Prestation updated successfully:", updatedPrestation);
           setEditingPrestation(null);
           setPr({
@@ -110,6 +118,7 @@ export default function PrestationCreateScreen() {
             description: "",
             bannerImageFile: null,
             otherImageFile: null,
+            deletedImages: [],
           });
         }
       } else {
@@ -125,6 +134,7 @@ export default function PrestationCreateScreen() {
             description: "",
             bannerImageFile: null,
             otherImageFile: null,
+            deletedImages: [],
           });
         }
       }
@@ -143,7 +153,8 @@ export default function PrestationCreateScreen() {
       otherImage: Array.isArray(prestation.otherImage) ? prestation.otherImage : [],
       description: prestation.description,
       bannerImageFile: null,
-      otherImageFile: null
+      otherImageFile: null,
+      deletedImages: [],
     });
   };
 
@@ -155,7 +166,27 @@ export default function PrestationCreateScreen() {
       bannerImage: "",
       otherImage: [],
       description: "",
+      deletedImages: [],
     });
+  };
+
+  const handleRemoveOtherImage = async (index: number, imageUrl: string) => {
+    if (editingPrestation?.id) {
+      // Instead of deleting immediately, add to deletedImages array
+      setPr(prev => ({
+        ...prev,
+        otherImage: prev.otherImage.filter((_, i) => i !== index),
+        otherImageFile: prev.otherImageFile?.filter((_, i) => i !== index) || null,
+        deletedImages: [...(prev.deletedImages || []), imageUrl]
+      }));
+    } else {
+      // For new prestations, just update local state
+      setPr(prev => ({
+        ...prev,
+        otherImage: prev.otherImage.filter((_, i) => i !== index),
+        otherImageFile: prev.otherImageFile?.filter((_, i) => i !== index) || null
+      }));
+    }
   };
 
   return (
@@ -225,15 +256,7 @@ export default function PrestationCreateScreen() {
                     />
                     <button
                       type="button"
-                      onClick={() => {
-                        const newOtherImages = pr.otherImage.filter((_, i: number) => i !== index);
-                        const newOtherImageFiles = pr.otherImageFile?.filter((_, i: number) => i !== index) || null;
-                        setPr({
-                          ...pr,
-                          otherImage: newOtherImages,
-                          otherImageFile: newOtherImageFiles
-                        });
-                      }}
+                      onClick={() => handleRemoveOtherImage(index, imageUrl)}
                       className="absolute right-2 top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

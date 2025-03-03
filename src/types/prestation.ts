@@ -16,6 +16,7 @@ export interface PrestationCreate {
   description: string;
   bannerImageFile?: File | null;
   otherImageFile?: File[] | null;
+  deletedImages?: string[];
 }
 
 export class PrestationModel extends Model<Prestation> {
