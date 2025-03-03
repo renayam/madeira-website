@@ -19,7 +19,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-primary">
+    <div className="flex min-h-screen flex-col items-center justify-center ">
       <div className="w-full max-w-6xl px-4 py-8">
         <Swiper
           loop
@@ -44,7 +44,7 @@ export default function Home() {
                 priority={index === 0}
                 sizes="(max-width: 1536px) 100vw, 1536px"
               />
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
+              <div className="absolute bottom-0 left-0 right-0  from-black/70 to-transparent p-6">
                 <h2 className="text-2xl font-semibold text-white">
                   {item.title}
                 </h2>
@@ -65,7 +65,7 @@ export default function Home() {
         >
           <Link
             href="/client/portfolio"
-            className="rounded-full bg-blue-600 px-6 py-3 text-white shadow-lg transition-colors duration-300 hover:bg-blue-700"
+            className="rounded-full  px-6 py-3 text-white shadow-lg transition-colors duration-300 "
           >
             Découvrir nos services
           </Link>
