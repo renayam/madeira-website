@@ -50,7 +50,7 @@ const Nav: React.FC = () => {
   ];
 
   return (
-    <nav>
+    <nav className="pb-6">
       <ul className="mx-auto flex w-1/2 flex-row justify-between space-x-0 md:space-x-8">
         {navItems.map((item) => (
           <li key={item.href}>
