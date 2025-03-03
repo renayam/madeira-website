@@ -1,13 +1,24 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { usePrestationContext } from "@/components/PrestationContext";
-import useImageExpand from "@/hook/useImageExpand";
 import { Prestation } from "@/types/prestation";
+import ImageSlider from "@/components/ImageSlider";
 
 const PrestationList: React.FC = () => {
   const { prestations, isLoading } = usePrestationContext();
-  const { expandedImage, openImage, closeImage } = useImageExpand();
+  const [selectedImages, setSelectedImages] = useState<string[] | null>(null);
+
+  const handleImageClick = (mainImage: string, otherImages: string[] | string = []) => {
+    // Convert otherImages to array if it's a string
+    const otherImagesArray = typeof otherImages === 'string'
+      ? otherImages.split(',').filter(Boolean)
+      : Array.isArray(otherImages) ? otherImages : [];
+    
+    // Combine main image with other images for the slider
+    const allImages = [mainImage, ...otherImagesArray];
+    setSelectedImages(allImages);
+  };
 
   if (isLoading) {
     return (
@@ -42,7 +53,7 @@ const PrestationList: React.FC = () => {
                     layout="fill"
                     objectFit="cover"
                     className="cursor-pointer"
-                    onClick={() => openImage(prestation.bannerImage || '')}
+                    onClick={() => handleImageClick(prestation.bannerImage, prestation.otherImage)}
                   />
                 </div>
               )}
@@ -65,7 +76,7 @@ const PrestationList: React.FC = () => {
                         layout="fill"
                         objectFit="cover"
                         className="cursor-pointer rounded-md"
-                        onClick={() => openImage(image)}
+                        onClick={() => handleImageClick(prestation.bannerImage || '', prestation.otherImage)}
                       />
                     </div>
                   ))}
@@ -76,19 +87,11 @@ const PrestationList: React.FC = () => {
         </div>
       )}
 
-      {expandedImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
-          onClick={closeImage}
-        >
-          <Image
-            src={expandedImage}
-            alt="Image Agrandie"
-            width={800}
-            height={600}
-            className="h-auto max-h-full w-auto max-w-full"
-          />
-        </div>
+      {selectedImages && selectedImages.length > 0 && (
+        <ImageSlider
+          images={selectedImages}
+          onClose={() => setSelectedImages(null)}
+        />
       )}
     </div>
   );
