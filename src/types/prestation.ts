@@ -5,7 +5,7 @@ export interface Prestation {
   id?: number;
   name: string;
   bannerImage: string;
-  otherImage: string[];
+  otherImage: string[] | string;
   description: string;
 }
 
@@ -22,7 +22,7 @@ export class PrestationModel extends Model<Prestation> {
   declare id: number;
   declare name: string;
   declare bannerImage: string;
-  declare otherImage: string[];
+  declare otherImage: string[] | string;
   declare description: string;
   declare created_at: Date;
   declare updated_at: Date;
@@ -51,10 +51,17 @@ export class PrestationModel extends Model<Prestation> {
         field: "other_image",
         get() {
           const rawValue = this.getDataValue('otherImage');
-          return rawValue ? rawValue.split(',') : [];
+          if (typeof rawValue === 'string') {
+            return rawValue ? rawValue.split(',') : [];
+          }
+          return rawValue || [];
         },
-        set(val: string[]) {
-          this.setDataValue('otherImage', val);
+        set(val: string[] | string) {
+          if (Array.isArray(val)) {
+            this.setDataValue('otherImage', val.join(','));
+          } else {
+            this.setDataValue('otherImage', val);
+          }
         }
       },
       description: {

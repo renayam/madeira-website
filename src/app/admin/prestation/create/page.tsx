@@ -44,11 +44,23 @@ export default function PrestationCreateScreen() {
 
     if (otherImages.length > 0) {
       try {
-        setPr({
-          ...pr,
-          otherImage: otherImageUrls,
-          otherImageFile: otherImages
-        });
+        // If we're editing, append new images to existing ones
+        if (editingPrestation) {
+          const existingUrls = Array.isArray(pr.otherImage) ? pr.otherImage : [];
+          const existingFiles = pr.otherImageFile || [];
+          setPr({
+            ...pr,
+            otherImage: [...existingUrls, ...otherImageUrls],
+            otherImageFile: [...existingFiles, ...otherImages]
+          });
+        } else {
+          // For new prestations, just set the new images
+          setPr({
+            ...pr,
+            otherImage: otherImageUrls,
+            otherImageFile: otherImages
+          });
+        }
       } catch (error) {
         console.error("Error uploading other images:", error);
         alert("Erreur lors du téléchargement des images");
@@ -128,8 +140,10 @@ export default function PrestationCreateScreen() {
     setPr({
       name: prestation.name,
       bannerImage: prestation.bannerImage || "",
-      otherImage: prestation.otherImage || [],
+      otherImage: Array.isArray(prestation.otherImage) ? prestation.otherImage : [],
       description: prestation.description,
+      bannerImageFile: null,
+      otherImageFile: null
     });
   };
 

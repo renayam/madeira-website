@@ -33,7 +33,6 @@ export async function POST(request: Request) {
     const description = formData.get("description");
     const bannerImage = formData.get("bannerImage");
     const otherImages = formData.getAll("otherImage"); // Get all otherImage files
-
     if (!name || typeof name !== "string") {
       return NextResponse.json(
         { error: "Name is required and must be a string" },

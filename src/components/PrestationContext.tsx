@@ -16,6 +16,7 @@ type PrestationContextType = {
   AddPrestation: (formData: FormData) => Promise<Prestation | null>;
   removePrestation: (id: number) => Promise<boolean>;
   updatePrestation: (formData: FormData) => Promise<Prestation | null>;
+  removeOtherImage: (id: number) => Promise<boolean>;
 };
 
 // Create the context
@@ -83,14 +84,31 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
         throw new Error("Failed to update prestation");
       }
 
-      const updatedPrestation = await response.json();
+      const { prestation } = await response.json();
       setPrestations((prev) => prev.map((p) => 
-        p.id === updatedPrestation.id ? updatedPrestation : p
+        p.id === prestation.id ? prestation : p
       ));
-      return updatedPrestation;
+      return prestation;
     } catch (error) {
       console.error("Error updating prestation:", error);
       return null;
+    }
+  };
+
+  const removeOtherImage = async (id: number) => {
+    try {
+      const response = await fetch(`/api/prestation/${id}/other-image`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error removing other image:", error);
+      return false;
     }
   };
 
@@ -130,6 +148,7 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
     AddPrestation,
     removePrestation,
     updatePrestation,
+    removeOtherImage,
   };
 
   return (
