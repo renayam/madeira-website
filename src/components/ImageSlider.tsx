@@ -15,6 +15,8 @@ interface ImageSliderProps {
  */
 const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   /**
    * Advances to the next image in the slider
@@ -79,62 +81,102 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
     }
   };
 
+  // Handle touch events for swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      goToNext();
+    } else if (isRightSwipe) {
+      goToPrevious();
+    }
+
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
+
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90" 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 touch-none" 
       onClick={onClose}
     >
       <div 
-        className="relative"
+        className="relative w-full h-full md:w-auto md:h-auto"
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Close button */}
         <button
-          className="absolute -right-10 -top-10 z-50 text-2xl text-white hover:text-gray-300"
+          className="absolute right-4 top-4 z-50 p-2 text-2xl text-white hover:text-gray-300 md:-right-10 md:-top-10"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             onClose();
           }}
+          aria-label="Close"
         >
           ✕
         </button>
 
-        {/* Navigation buttons */}
+        {/* Navigation buttons - hidden on mobile */}
         {images.length > 1 && (
           <>
             <button
-              className="absolute left-4 top-1/2 z-50 -translate-y-1/2 rounded-full bg-white/30 p-4 text-white hover:bg-white/50"
+              className="hidden md:block absolute left-4 top-1/2 z-50 -translate-y-1/2 rounded-full bg-white/30 p-4 text-white hover:bg-white/50"
               onClick={(e) => handleButtonClick(e, 'prev')}
+              aria-label="Previous image"
             >
               ←
             </button>
             <button
-              className="absolute right-4 top-1/2 z-50 -translate-y-1/2 rounded-full bg-white/30 p-4 text-white hover:bg-white/50"
+              className="hidden md:block absolute right-4 top-1/2 z-50 -translate-y-1/2 rounded-full bg-white/30 p-4 text-white hover:bg-white/50"
               onClick={(e) => handleButtonClick(e, 'next')}
+              aria-label="Next image"
             >
               →
             </button>
           </>
         )}
 
-        {/* Image */}
-        <div className="relative h-[80vh] w-[90vw]">
+        {/* Image container */}
+        <div className="relative h-screen w-screen md:h-[80vh] md:w-[90vw] max-w-7xl mx-auto">
           <Image
-            key={currentIndex} // Force re-render on image change
+            key={currentIndex}
             src={images[currentIndex]}
             alt={`Image ${currentIndex + 1}`}
             fill
             className="object-contain"
             priority
-            sizes="90vw"
+            sizes="(max-width: 768px) 100vw, 90vw"
+            quality={90}
           />
         </div>
 
         {/* Image counter */}
-        <div className="absolute bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full bg-black/50 px-4 py-2 text-white">
+        <div className="absolute bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full bg-black/50 px-4 py-2 text-sm md:text-base text-white">
           {currentIndex + 1} / {images.length}
         </div>
+
+        {/* Swipe indicator - only shown on mobile */}
+        {images.length > 1 && (
+          <div className="absolute bottom-16 left-1/2 z-50 -translate-x-1/2 text-white text-sm opacity-50 md:hidden">
+            Swipe left or right to navigate
+          </div>
+        )}
       </div>
     </div>
   );

@@ -10,7 +10,6 @@ type Data = {
   description: string;
   mainImage: string | null;
   otherImage: string[];
-  altText: string;
   mainImageFile?: File | null;
   otherImageFile?: File[] | null;
   deletedImages: string[];
@@ -23,7 +22,6 @@ const ManagePortfolio: React.FC = () => {
     description: "",
     mainImage: null,
     otherImage: [],
-    altText: "",
     mainImageFile: null,
     otherImageFile: null,
     deletedImages: [],
@@ -107,7 +105,6 @@ const ManagePortfolio: React.FC = () => {
       const formData = new FormData();
       formData.append("title", data.title);
       formData.append("description", data.description);
-      formData.append("altText", data.altText);
 
       // Only append file if it exists
       if (data.mainImageFile instanceof File) {
@@ -140,7 +137,6 @@ const ManagePortfolio: React.FC = () => {
           description: "",
           mainImage: null,
           otherImage: [],
-          altText: "",
           mainImageFile: null,
           otherImageFile: null,
           deletedImages: [],
@@ -159,7 +155,6 @@ const ManagePortfolio: React.FC = () => {
       description: portfolio.description,
       mainImage: portfolio.mainImage,
       otherImage: Array.isArray(portfolio.otherImage) ? portfolio.otherImage : [],
-      altText: portfolio.altText,
       mainImageFile: null,
       otherImageFile: null,
       deletedImages: [],
@@ -173,7 +168,6 @@ const ManagePortfolio: React.FC = () => {
       description: "",
       mainImage: null,
       otherImage: [],
-      altText: "",
       mainImageFile: null,
       otherImageFile: null,
       deletedImages: [],
@@ -205,20 +199,6 @@ const ManagePortfolio: React.FC = () => {
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">
-                Texte Alternatif :
-                <input
-                  type="text"
-                  value={data.altText}
-                  onChange={(e) =>
-                    setData((prev) => ({ ...prev, altText: e.target.value }))
-                  }
-                  required
-                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
-                />
-              </label>
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">
                 Image Principale :
                 <input
                   type="file"
@@ -230,12 +210,13 @@ const ManagePortfolio: React.FC = () => {
               </label>
               {data?.mainImage && (
                 <div className="relative mt-2">
+                  <h3 className="mb-3 text-base sm:text-lg font-semibold text-white">{data.title || "Sans titre"}</h3>
                   <Image
                     src={data.mainImage}
                     alt="Aperçu de l'Image Principale"
                     width={600}
                     height={400}
-                    className="h-auto w-full rounded-md"
+                    className="h-auto w-full rounded-md aspect-[4/3] object-cover"
                   />
                   <button
                     type="button"
@@ -362,7 +343,6 @@ function ViewPortfolio({ item, onEdit }: { item: PortfolioItem; onEdit: (portfol
   const { deletePortfolioItem } = usePortfolio();
   const { openImage } = useImageExpand();
 
-  // Ensure item has an id before rendering
   if (!item || typeof item.id !== 'number') return null;
 
   const handleImageClick = (imageUrl: string) => {
@@ -370,48 +350,48 @@ function ViewPortfolio({ item, onEdit }: { item: PortfolioItem; onEdit: (portfol
   };
 
   return (
-    <div className="mb-4 rounded-lg bg-gray-900 shadow-md">
-      <div className="p-3">
-        <h3 className="mb-1 text-lg font-semibold">{item.title}</h3>
-        <div className="mb-4">
+    <div className="mb-4 rounded-lg bg-gray-900 shadow-md overflow-hidden">
+      <div className="p-3 sm:p-4">
+        <h3 className="mb-3 text-base sm:text-lg font-semibold text-white">{item.title}</h3>
+        <div className="relative mb-3">
           <Image
             src={item.mainImage}
-            alt={item.altText}
+            alt={item.title}
             width={300}
             height={200}
-            className="w-full cursor-pointer rounded-md object-cover"
+            className="w-full cursor-pointer rounded-md object-cover aspect-video"
             onClick={() => handleImageClick(item.mainImage)}
           />
         </div>
         {Array.isArray(item.otherImage) && item.otherImage.length > 0 && (
-          <div className="mb-4 grid grid-cols-3 gap-2">
+          <div className="mb-3 grid grid-cols-3 gap-2">
             {item.otherImage.map((imageUrl, index) => (
-              <div key={index} className="relative">
+              <div key={index} className="relative aspect-square">
                 <Image
                   src={imageUrl}
-                  alt={`${item.altText} - Image ${index + 1}`}
-                  width={100}
-                  height={100}
-                  className="cursor-pointer rounded-md object-cover"
+                  alt={`${item.title} - Image ${index + 1}`}
+                  layout="fill"
+                  objectFit="cover"
+                  className="cursor-pointer rounded-md"
                   onClick={() => handleImageClick(imageUrl)}
                 />
               </div>
             ))}
           </div>
         )}
-        <p className="mb-2 line-clamp-2 text-sm text-gray-400">
+        <p className="mb-3 text-xs sm:text-sm text-gray-400">
           {item.description}
         </p>
         <div className="flex items-center justify-between">
           <button
             onClick={() => onEdit(item)}
-            className="text-blue-500 transition hover:text-blue-700"
+            className="text-blue-500 transition hover:text-blue-700 p-2"
           >
             ✏️
           </button>
           <button
             onClick={() => deletePortfolioItem(item.id)}
-            className="text-sm text-red-500 hover:text-red-600"
+            className="text-xs sm:text-sm text-red-500 hover:text-red-600 transition-colors p-2"
           >
             Supprimer
           </button>
