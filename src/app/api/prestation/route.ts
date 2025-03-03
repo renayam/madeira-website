@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
     // Upload images to Minio if they exist
     let bannerImageUrl = "";
-    let otherImageUrls: string[] = [];
+    const otherImageUrls: string[] = [];
 
     if (bannerImage && bannerImage instanceof File) {
       try {

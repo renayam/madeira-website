@@ -5,12 +5,11 @@ import { imageStorage } from "@/service/minio";
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
 ) {
     try {
-        const id = parseInt(params.id);
+        const id = request.nextUrl.pathname.split("/").pop();
 
-        if (isNaN(id)) {
+        if (!id) {
             return NextResponse.json(
                 { error: "Invalid portfolio ID" },
                 { status: 400 }
@@ -41,13 +40,13 @@ export async function DELETE(
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
 ) {
     try {
         const formData = await request.formData();
-        const id = parseInt(params.id);
+        // with pop
+        const id = request.nextUrl.pathname.split("/").pop();
 
-        if (isNaN(id)) {
+        if (!id) {
             return NextResponse.json(
                 { error: "Invalid portfolio ID" },
                 { status: 400 }

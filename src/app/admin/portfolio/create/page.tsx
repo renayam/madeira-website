@@ -30,7 +30,7 @@ const ManagePortfolio: React.FC = () => {
   });
   const [editingPortfolio, setEditingPortfolio] = useState<PortfolioItem | null>(null);
 
-  const { expandedImage, closeImage, openImage } = useImageExpand();
+  const { expandedImage, closeImage } = useImageExpand();
 
   const handleMainImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
