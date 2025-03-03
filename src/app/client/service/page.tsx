@@ -30,42 +30,49 @@ const ServiceList: React.FC = () => {
   ];
 
   return (
-    <div className="container mx-auto bg-primary px-4 py-8">
-      <h2 className="mb-6 text-center text-3xl font-bold text-white">
+    <div className="container mx-auto bg-primary px-4 sm:px-6 py-8 max-w-7xl">
+      <h2 className="mb-6 text-center text-2xl sm:text-3xl font-bold text-white">
         Notre Processus de Travail
       </h2>
 
-      <div className="relative py-8">
+      <div className="relative py-4 sm:py-8 space-y-8 sm:space-y-12">
         {steps.map((step, index) => (
           <div
             key={index}
-            className={`mb-8 flex flex-col items-center md:flex-row ${
-              index % 2 === 0 ? "md:flex-row-reverse" : ""
+            className={`flex flex-col gap-6 sm:gap-8 ${
+              index % 2 === 0
+                ? "md:flex-row-reverse"
+                : "md:flex-row"
             }`}
           >
-            <div className="w-full p-4 md:w-1/3">
-              <Image
-                src={step.image}
-                alt={`Illustration de ${step.title}`}
-                width={200}
-                height={200}
-                className="aspect-square rounded-lg object-cover shadow-md"
-              />
+            <div className="w-full md:w-1/3 flex justify-center items-center">
+              <div className="relative w-full max-w-[280px] aspect-square">
+                <Image
+                  src={step.image}
+                  alt={`Illustration de ${step.title}`}
+                  fill
+                  className="rounded-lg object-cover shadow-md"
+                />
+              </div>
             </div>
 
             <div
-              className={`w-full rounded-lg bg-white p-6 shadow-md md:w-1/2 ${
-                index % 2 === 0 ? "text-right md:mr-4" : "text-left md:ml-4"
+              className={`w-full md:w-1/2 rounded-lg bg-white p-4 sm:p-6 shadow-md ${
+                index % 2 === 0 
+                  ? "md:text-right" 
+                  : "text-left"
               }`}
             >
-              <h3 className="mb-4 text-xl font-semibold text-primary">
+              <h3 className="mb-3 sm:mb-4 text-lg sm:text-xl font-semibold text-primary">
                 {step.title}
               </h3>
-              {step.description.map((desc, descIndex) => (
-                <p key={descIndex} className="mb-2 text-gray-700">
-                  {desc}
-                </p>
-              ))}
+              <div className="space-y-2">
+                {step.description.map((desc, descIndex) => (
+                  <p key={descIndex} className="text-sm sm:text-base text-gray-700">
+                    {desc}
+                  </p>
+                ))}
+              </div>
             </div>
           </div>
         ))}
