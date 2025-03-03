@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
         const description = formData.get("description");
         const mainImage = formData.get("mainImage");
         const altText = formData.get("altText");
+        const otherImages = formData.getAll("otherImage");
 
         if (!title || typeof title !== "string") {
             return NextResponse.json(
@@ -48,11 +49,32 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // Create portfolio item with the image URL
+        // Upload other images to Minio if they exist
+        const otherImageUrls: string[] = [];
+        for (const image of otherImages) {
+            if (image instanceof File) {
+                try {
+                    const buffer = await image.arrayBuffer();
+                    const result = await imageStorage.uploadFile({
+                        file: Buffer.from(buffer),
+                        key: `portfolio/${Date.now()}-${image.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
+                        contentType: image.type || 'image/jpeg',
+                    });
+                    otherImageUrls.push(result.url);
+                    console.log("Other image uploaded successfully:", result.url);
+                } catch (error) {
+                    console.error("Error uploading other image:", error);
+                    // Continue with the remaining images even if one fails
+                }
+            }
+        }
+
+        // Create portfolio item with the image URLs
         const portfolioData: PortfolioItemCreate = {
             title,
             description: description as string || "",
             mainImage: mainImageUrl,
+            otherImage: otherImageUrls,
             altText: altText as string || "",
         };
 

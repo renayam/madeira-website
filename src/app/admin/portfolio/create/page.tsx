@@ -9,8 +9,11 @@ type Data = {
   title: string;
   description: string;
   mainImage: string | null;
+  otherImage: string[];
   altText: string;
   mainImageFile?: File | null;
+  otherImageFile?: File[] | null;
+  deletedImages: string[];
 };
 
 const ManagePortfolio: React.FC = () => {
@@ -19,12 +22,15 @@ const ManagePortfolio: React.FC = () => {
     title: "",
     description: "",
     mainImage: null,
+    otherImage: [],
     altText: "",
     mainImageFile: null,
+    otherImageFile: null,
+    deletedImages: [],
   });
   const [editingPortfolio, setEditingPortfolio] = useState<PortfolioItem | null>(null);
 
-  const { expandedImage, closeImage } = useImageExpand();
+  const { expandedImage, closeImage, openImage } = useImageExpand();
 
   const handleMainImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -37,8 +43,58 @@ const ManagePortfolio: React.FC = () => {
     }
   };
 
+  const handleOtherImagesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const otherImages = files.filter(file => file.type.startsWith('image/'));
+    const otherImageUrls = otherImages.map(file => URL.createObjectURL(file));
+
+    if (otherImages.length > 0) {
+      try {
+        // If we're editing, append new images to existing ones
+        if (editingPortfolio) {
+          const existingUrls = Array.isArray(data.otherImage) ? data.otherImage : [];
+          const existingFiles = data.otherImageFile || [];
+          setData({
+            ...data,
+            otherImage: [...existingUrls, ...otherImageUrls],
+            otherImageFile: [...existingFiles, ...otherImages]
+          });
+        } else {
+          // For new portfolios, just set the new images
+          setData({
+            ...data,
+            otherImage: otherImageUrls,
+            otherImageFile: otherImages
+          });
+        }
+      } catch (error) {
+        console.error("Error uploading other images:", error);
+        alert("Erreur lors du téléchargement des images");
+      }
+    }
+  };
+
   const handleDeleteMainImage = () =>
     setData((prev) => ({ ...prev, mainImage: null, mainImageFile: null }));
+
+  const handleRemoveOtherImage = (index: number, imageUrl: string) => {
+    if (editingPortfolio?.id) {
+      // Instead of deleting immediately, add to deletedImages array
+      setData(prev => ({
+        ...prev,
+        otherImage: prev.otherImage.filter((_, i) => i !== index),
+        otherImageFile: prev.otherImageFile?.filter((_, i) => i !== index) || null,
+        deletedImages: [...(prev.deletedImages || []), imageUrl]
+      }));
+    } else {
+      // For new portfolios, just update local state
+      setData(prev => ({
+        ...prev,
+        otherImage: prev.otherImage.filter((_, i) => i !== index),
+        otherImageFile: prev.otherImageFile?.filter((_, i) => i !== index) || null
+      }));
+    }
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -59,6 +115,14 @@ const ManagePortfolio: React.FC = () => {
         formData.append("mainImage", data.mainImageFile);
       }
 
+      // Handle multiple other images
+      if (data.otherImageFile && Array.isArray(data.otherImageFile)) {
+        console.log("Appending other images:", data.otherImageFile.map(f => f.name));
+        data.otherImageFile.forEach(file => {
+          formData.append("otherImage", file);
+        });
+      }
+
       let result;
       if (editingPortfolio && editingPortfolio.id) {
         console.log("Updating portfolio item...");
@@ -75,8 +139,11 @@ const ManagePortfolio: React.FC = () => {
           title: "",
           description: "",
           mainImage: null,
+          otherImage: [],
           altText: "",
           mainImageFile: null,
+          otherImageFile: null,
+          deletedImages: [],
         });
       }
     } catch (error) {
@@ -91,8 +158,11 @@ const ManagePortfolio: React.FC = () => {
       title: portfolio.title,
       description: portfolio.description,
       mainImage: portfolio.mainImage,
+      otherImage: Array.isArray(portfolio.otherImage) ? portfolio.otherImage : [],
       altText: portfolio.altText,
       mainImageFile: null,
+      otherImageFile: null,
+      deletedImages: [],
     });
   };
 
@@ -102,8 +172,11 @@ const ManagePortfolio: React.FC = () => {
       title: "",
       description: "",
       mainImage: null,
+      otherImage: [],
       altText: "",
       mainImageFile: null,
+      otherImageFile: null,
+      deletedImages: [],
     });
   };
 
@@ -173,6 +246,40 @@ const ManagePortfolio: React.FC = () => {
                   </button>
                 </div>
               )}
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Autres Images :
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleOtherImagesUpload}
+                  className="mt-1 block w-full cursor-pointer rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
+                />
+              </label>
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                {data?.otherImage && data.otherImage.map((imageUrl: string, index: number) => (
+                  <div key={index} className="relative">
+                    <Image
+                      src={imageUrl}
+                      alt={`Other Image Preview ${index + 1}`}
+                      width={200}
+                      height={200}
+                      className="rounded-md object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveOtherImage(index, imageUrl)}
+                      className="absolute right-2 top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">
@@ -253,23 +360,45 @@ const PortfolioList = ({ onEdit }: { onEdit: (portfolio: PortfolioItem) => void 
 
 function ViewPortfolio({ item, onEdit }: { item: PortfolioItem; onEdit: (portfolio: PortfolioItem) => void }) {
   const { deletePortfolioItem } = usePortfolio();
+  const { openImage } = useImageExpand();
 
   // Ensure item has an id before rendering
   if (!item || typeof item.id !== 'number') return null;
 
+  const handleImageClick = (imageUrl: string) => {
+    openImage(imageUrl);
+  };
+
   return (
-    <div className="mb-4 flex rounded-lg bg-gray-900 shadow-md">
-      <div className="w-1/3">
-        <Image
-          src={item.mainImage}
-          alt={item.altText}
-          width={150}
-          height={100}
-          className="object-cover"
-        />
-      </div>
-      <div className="w-2/3 p-3">
+    <div className="mb-4 rounded-lg bg-gray-900 shadow-md">
+      <div className="p-3">
         <h3 className="mb-1 text-lg font-semibold">{item.title}</h3>
+        <div className="mb-4">
+          <Image
+            src={item.mainImage}
+            alt={item.altText}
+            width={300}
+            height={200}
+            className="w-full cursor-pointer rounded-md object-cover"
+            onClick={() => handleImageClick(item.mainImage)}
+          />
+        </div>
+        {Array.isArray(item.otherImage) && item.otherImage.length > 0 && (
+          <div className="mb-4 grid grid-cols-3 gap-2">
+            {item.otherImage.map((imageUrl, index) => (
+              <div key={index} className="relative">
+                <Image
+                  src={imageUrl}
+                  alt={`${item.altText} - Image ${index + 1}`}
+                  width={100}
+                  height={100}
+                  className="cursor-pointer rounded-md object-cover"
+                  onClick={() => handleImageClick(imageUrl)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
         <p className="mb-2 line-clamp-2 text-sm text-gray-400">
           {item.description}
         </p>

@@ -6,18 +6,27 @@ export interface PortfolioItem {
   title: string;
   description: string;
   mainImage: string;
-  // gallery: string[];
+  otherImage: string[] | string;
   altText: string;
 }
 
-export type PortfolioItemCreate = Omit<PortfolioItem, "id">;
+export type PortfolioItemCreate = {
+  title: string;
+  description: string;
+  mainImage: string | null;
+  otherImage: string[];
+  altText: string;
+  mainImageFile?: File | null;
+  otherImageFile?: File[] | null;
+  deletedImages?: string[];
+};
 
 export class PortfolioItemModel extends Model<PortfolioItem> {
   declare id: number;
   declare title: string;
   declare description: string;
   declare mainImage: string;
-  // declare gallery: string[];
+  declare otherImage: string[] | string;
   declare altText: string;
   declare created_at: Date;
   declare updated_at: Date;
@@ -45,10 +54,25 @@ export class PortfolioItemModel extends Model<PortfolioItem> {
         allowNull: false,
         field: "main_image",
       },
-      // gallery: {
-      //   type: DataTypes.ARRAY(DataTypes.STRING),
-      //   allowNull: true,
-      // },
+      otherImage: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        field: "other_image",
+        get() {
+          const rawValue = this.getDataValue('otherImage');
+          if (typeof rawValue === 'string') {
+            return rawValue ? rawValue.split(',') : [];
+          }
+          return rawValue || [];
+        },
+        set(val: string[] | string) {
+          if (Array.isArray(val)) {
+            this.setDataValue('otherImage', val.join(','));
+          } else {
+            this.setDataValue('otherImage', val);
+          }
+        }
+      },
       altText: {
         type: DataTypes.STRING,
         allowNull: true,

@@ -16,7 +16,7 @@ type PrestationContextType = {
   AddPrestation: (formData: FormData) => Promise<Prestation | null>;
   removePrestation: (id: number) => Promise<boolean>;
   updatePrestation: (formData: FormData) => Promise<Prestation | null>;
-  removeOtherImage: (id: number) => Promise<boolean>;
+  removeOtherImage: (id: number, imageUrl: string) => Promise<boolean>;
 };
 
 // Create the context
@@ -95,15 +95,22 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const removeOtherImage = async (id: number) => {
+  const removeOtherImage = async (id: number, imageUrl: string) => {
     try {
-      const response = await fetch(`/api/prestation/${id}/other-image`, {
+      const response = await fetch(`/api/prestation/${id}/other-image?imageUrl=${encodeURIComponent(imageUrl)}`, {
         method: "DELETE",
       });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const { updatedImages } = await response.json();
+      
+      // Update the local state with the new images
+      setPrestations((prev) => prev.map((p) => 
+        p.id === id ? { ...p, otherImage: updatedImages } : p
+      ));
 
       return true;
     } catch (error) {

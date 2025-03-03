@@ -1,22 +1,159 @@
 import { DatabaseService } from "../../../../service/storage.server";
 import { PortfolioItemModel } from "@/types/portfolio";
 import { NextResponse, NextRequest } from "next/server";
+import { imageStorage } from "@/service/minio";
 
-export async function DELETE(request: NextRequest) {
-    const id = request.nextUrl.pathname.split("/").pop();
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const id = parseInt(params.id);
 
-    if (!id) {
-        return NextResponse.json({ error: "Invalid or missing ID" }, { status: 400 });
+        if (isNaN(id)) {
+            return NextResponse.json(
+                { error: "Invalid portfolio ID" },
+                { status: 400 }
+            );
+        }
+
+        const instance = await DatabaseService.getInstance();
+        await PortfolioItemModel.initialize(instance);
+
+        const portfolioItem = await PortfolioItemModel.findByPk(id);
+        if (!portfolioItem) {
+            return NextResponse.json(
+                { error: "Portfolio item not found" },
+                { status: 404 }
+            );
+        }
+
+        await portfolioItem.destroy();
+        return NextResponse.json({ message: "Portfolio item deleted successfully" });
+    } catch (error) {
+        console.error('Failed to delete portfolio item:', error);
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : 'An unknown error occurred' },
+            { status: 500 }
+        );
     }
+}
 
-    const instance = await DatabaseService.getInstance();
-    await PortfolioItemModel.initialize(instance);
-    const portfolioItem = await PortfolioItemModel.findByPk(id);
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const formData = await request.formData();
+        const id = parseInt(params.id);
 
-    if (!portfolioItem) {
-        return NextResponse.json({ error: "Portfolio item not found" }, { status: 404 });
+        if (isNaN(id)) {
+            return NextResponse.json(
+                { error: "Invalid portfolio ID" },
+                { status: 400 }
+            );
+        }
+
+        // Log received data for debugging
+        console.log("Received FormData entries for update:");
+        for (const [key, value] of formData.entries()) {
+            console.log(`${key}:`, value instanceof File ? `File: ${value.name}` : value);
+        }
+
+        const instance = await DatabaseService.getInstance();
+        await PortfolioItemModel.initialize(instance);
+
+        // Find the existing portfolio item
+        const portfolioItem = await PortfolioItemModel.findByPk(id);
+        if (!portfolioItem) {
+            return NextResponse.json(
+                { error: "Portfolio item not found" },
+                { status: 404 }
+            );
+        }
+
+        // Extract form data
+        const title = formData.get("title");
+        const description = formData.get("description");
+        const mainImage = formData.get("mainImage");
+        const altText = formData.get("altText");
+        const otherImages = formData.getAll("otherImage");
+        const deletedImages = formData.getAll("deletedImages");
+
+        // Handle main image update if provided
+        let mainImageUrl = portfolioItem.mainImage;
+        if (mainImage instanceof File) {
+            try {
+                const buffer = await mainImage.arrayBuffer();
+                const result = await imageStorage.uploadFile({
+                    file: Buffer.from(buffer),
+                    key: `portfolio/${Date.now()}-${mainImage.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
+                    contentType: mainImage.type || 'image/jpeg',
+                });
+                mainImageUrl = result.url;
+                console.log("Updated main image uploaded successfully:", mainImageUrl);
+            } catch (error) {
+                console.error("Error uploading updated main image:", error);
+                return NextResponse.json(
+                    { error: "Failed to upload main image" },
+                    { status: 500 }
+                );
+            }
+        }
+
+        // Handle other images
+        let existingOtherImages = Array.isArray(portfolioItem.otherImage) 
+            ? portfolioItem.otherImage 
+            : typeof portfolioItem.otherImage === 'string'
+                ? portfolioItem.otherImage.split(',').filter(Boolean)
+                : [];
+
+        // Remove deleted images from the existing array
+        if (deletedImages.length > 0) {
+            existingOtherImages = existingOtherImages.filter(
+                (img: string) => !deletedImages.includes(img)
+            );
+        }
+
+        // Upload new other images
+        const newOtherImageUrls: string[] = [];
+        for (const image of otherImages) {
+            if (image instanceof File) {
+                try {
+                    const buffer = await image.arrayBuffer();
+                    const result = await imageStorage.uploadFile({
+                        file: Buffer.from(buffer),
+                        key: `portfolio/${Date.now()}-${image.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
+                        contentType: image.type || 'image/jpeg',
+                    });
+                    newOtherImageUrls.push(result.url);
+                    console.log("New other image uploaded successfully:", result.url);
+                } catch (error) {
+                    console.error("Error uploading new other image:", error);
+                    // Continue with remaining images even if one fails
+                }
+            }
+        }
+
+        // Combine existing and new other images
+        const finalOtherImages = [...existingOtherImages, ...newOtherImageUrls];
+
+        // Update the portfolio item
+        const updatedPortfolio = await portfolioItem.update({
+            title: title as string || portfolioItem.title,
+            description: description as string || portfolioItem.description,
+            mainImage: mainImageUrl,
+            otherImage: finalOtherImages,
+            altText: altText as string || portfolioItem.altText,
+        });
+
+        console.log("Portfolio item updated successfully:", updatedPortfolio.toJSON());
+        return NextResponse.json(updatedPortfolio);
+    } catch (error) {
+        console.error('Failed to update portfolio item:', error);
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : 'An unknown error occurred' },
+            { status: 500 }
+        );
     }
-
-    await portfolioItem.destroy();
-    return NextResponse.json({ message: "Portfolio item deleted successfully" }, { status: 200 });
 }
