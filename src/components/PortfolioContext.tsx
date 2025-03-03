@@ -11,17 +11,28 @@ interface PortfolioContextType {
   deletePortfolioItem: (id: number) => void;
 }
 
-// Create the context
+/**
+ * Context for managing portfolio items throughout the application
+ */
 const PortfolioContext = createContext<PortfolioContextType | undefined>(
   undefined,
 );
 
-// Provider component
+/**
+ * Provider component for portfolio management functionality
+ * @param {Object} props - Component props
+ * @param {ReactNode} props.children - Child components
+ */
 export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
 
+  /**
+   * Adds a new portfolio item
+   * @param {FormData} formData - Form data containing portfolio item details
+   * @returns {Promise<PortfolioItem | null>} Created portfolio item or null if failed
+   */
   const addPortfolioItem = async (formData: FormData): Promise<PortfolioItem | null> => {
     try {
       const res = await fetch("/api/portfolio", {
@@ -44,6 +55,12 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  /**
+   * Updates an existing portfolio item
+   * @param {number} id - ID of the portfolio item to update
+   * @param {FormData} formData - Form data containing updated details
+   * @returns {Promise<PortfolioItem | null>} Updated portfolio item or null if failed
+   */
   const updatePortfolioItem = async (
     id: number,
     formData: FormData,
@@ -71,6 +88,10 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  /**
+   * Deletes a portfolio item
+   * @param {number} id - ID of the portfolio item to delete
+   */
   const deletePortfolioItem = async (id: number) => {
     try {
       const res = await fetch(`/api/portfolio/${id}`, {
@@ -119,7 +140,11 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({
   );
 };
 
-// Custom hook to use the Portfolio context
+/**
+ * Custom hook to access the portfolio context
+ * @returns {PortfolioContextType} Portfolio context value
+ * @throws {Error} If used outside of PortfolioProvider
+ */
 export const usePortfolio = () => {
   const context = useContext(PortfolioContext);
   if (context === undefined) {

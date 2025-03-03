@@ -9,6 +9,11 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 const REGION = "fr-par";
 const BUCKET_NAME = "madeira";
 
+/**
+ * Creates and configures an S3 client for interacting with Scaleway Object Storage
+ * @returns {S3Client} Configured S3 client instance
+ * @private
+ */
 function getS3Client() {
   return new S3Client({
     credentials: {
@@ -24,6 +29,12 @@ function getS3Client() {
   });
 }
 
+/**
+ * Generates a signed URL for accessing a specific object in the storage
+ * @param {string} objectKey - The key/path of the object to access
+ * @returns {Promise<{name: string, url: string}>} Object containing the name and signed URL
+ * @throws {Error} If object key is missing or if URL generation fails
+ */
 export async function getSpecificObjectUrl(
   objectKey: string,
 ): Promise<{ name: string; url: string }> {
@@ -46,6 +57,16 @@ export async function getSpecificObjectUrl(
   }
 }
 
+/**
+ * Uploads a file to the storage service
+ * @param {Object} params - Upload parameters
+ * @param {Buffer|ArrayBuffer|Uint8Array|string|ReadableStream} params.file - The file to upload
+ * @param {string} params.key - The key/path where the file will be stored
+ * @param {string} [params.contentType="application/octet-stream"] - The content type of the file
+ * @param {Record<string, string>} [params.metadata={}] - Additional metadata for the file
+ * @returns {Promise<{key: string, url: string}>} Object containing the file key and signed URL
+ * @throws {Error} If file or key is missing, or if upload fails
+ */
 export async function uploadFile(params: {
   file: Buffer | ArrayBuffer | Uint8Array | string | ReadableStream;
   key: string;

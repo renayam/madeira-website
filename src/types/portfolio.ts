@@ -21,6 +21,10 @@ export type PortfolioItemCreate = {
   deletedImages?: string[];
 };
 
+/**
+ * Sequelize model representing a portfolio item in the database
+ * @extends Model
+ */
 export class PortfolioItemModel extends Model<PortfolioItem> {
   declare id: number;
   declare title: string;
@@ -31,6 +35,12 @@ export class PortfolioItemModel extends Model<PortfolioItem> {
   declare created_at: Date;
   declare updated_at: Date;
 
+  /**
+   * Initializes the PortfolioItem model with the database connection
+   * @param {DatabaseService} db - Database service instance
+   * @returns {Promise<typeof PortfolioItemModel>} Initialized model
+   * @throws {Error} If initialization fails
+   */
   static async initialize(db: DatabaseService) {
     const sequelize = db.connection;
 

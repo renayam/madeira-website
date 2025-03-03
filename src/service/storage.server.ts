@@ -10,6 +10,10 @@ const DB_CONFIG = {
     password: process.env.DB_PASSWORD || "admin",
 };
 
+/**
+ * Service class for managing database connections and operations
+ * Implements the Singleton pattern to ensure a single database connection
+ */
 export class DatabaseService {
     private static _instance: DatabaseService;
     connection: Sequelize;
@@ -40,6 +44,11 @@ export class DatabaseService {
         PrestationModel.initialize(this);
     }
 
+    /**
+     * Gets the singleton instance of DatabaseService
+     * Creates a new instance if one doesn't exist
+     * @returns {DatabaseService} The singleton instance
+     */
     static getInstance(): DatabaseService {
         if (!DatabaseService._instance) {
             DatabaseService._instance = new DatabaseService();
@@ -47,6 +56,10 @@ export class DatabaseService {
         return DatabaseService._instance;
     }
 
+    /**
+     * Retrieves all tables in the current database
+     * @returns {Promise<unknown[]>} Array of table information
+     */
     public async getAllTables(): Promise<unknown[]> {
         const tables = await this.connection.query(
             "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()",
@@ -57,6 +70,11 @@ export class DatabaseService {
         return tables;
     }
 
+    /**
+     * Resets the database by dropping and recreating all tables
+     * @returns {Promise<boolean>} True if reset was successful
+     * @throws {Error} If reset operation fails
+     */
     public async reset(): Promise<boolean> {
         try {
             await this.connection.sync({ force: true });

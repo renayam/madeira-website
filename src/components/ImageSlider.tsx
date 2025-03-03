@@ -7,9 +7,19 @@ interface ImageSliderProps {
   onClose: () => void;
 }
 
+/**
+ * A responsive image slider/carousel component with keyboard navigation
+ * @param {ImageSliderProps} props - Component props
+ * @param {string[]} props.images - Array of image URLs to display
+ * @param {function} props.onClose - Callback function to close the slider
+ */
 const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  /**
+   * Advances to the next image in the slider
+   * @param {React.MouseEvent} [e] - Optional mouse event
+   */
   const goToNext = useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation();
     const nextIndex = (currentIndex + 1) % images.length;
@@ -17,6 +27,10 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
     setCurrentIndex(nextIndex);
   }, [currentIndex, images.length]);
 
+  /**
+   * Goes to the previous image in the slider
+   * @param {React.MouseEvent} [e] - Optional mouse event
+   */
   const goToPrevious = useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation();
     const prevIndex = (currentIndex - 1 + images.length) % images.length;
@@ -50,6 +64,11 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
     console.log('Current image index changed to:', currentIndex);
   }, [currentIndex]);
 
+  /**
+   * Handles button click events for navigation
+   * @param {React.MouseEvent} e - Mouse event
+   * @param {'next' | 'prev'} action - Navigation direction
+   */
   const handleButtonClick = (e: React.MouseEvent, action: 'next' | 'prev') => {
     e.preventDefault();
     e.stopPropagation();
