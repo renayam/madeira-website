@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     const name = formData.get("name");
     const description = formData.get("description");
     const bannerImage = formData.get("bannerImage");
-    const otherImage = formData.get("otherImage");
+    const otherImages = formData.getAll("otherImage"); // Get all otherImage files
 
     if (!name || typeof name !== "string") {
       return NextResponse.json(
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
     // Upload images to Minio if they exist
     let bannerImageUrl = "";
-    let otherImageUrl = "";
+    let otherImageUrls: string[] = [];
 
     if (bannerImage && bannerImage instanceof File) {
       try {
@@ -71,22 +71,25 @@ export async function POST(request: Request) {
       }
     }
 
-    if (otherImage && otherImage instanceof File) {
-      try {
-        const buffer = await otherImage.arrayBuffer();
-        const result = await imageStorage.uploadFile({
-          file: Buffer.from(buffer),
-          key: `prestations/other/${Date.now()}-${otherImage.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
-          contentType: otherImage.type || 'image/jpeg',
-        });
-        otherImageUrl = result.url;
-        console.log("Other image uploaded successfully:", otherImageUrl);
-      } catch (error) {
-        console.error("Error uploading other image:", error);
-        return NextResponse.json(
-          { error: "Failed to upload other image" },
-          { status: 500 }
-        );
+    // Upload all other images
+    for (const otherImage of otherImages) {
+      if (otherImage instanceof File) {
+        try {
+          const buffer = await otherImage.arrayBuffer();
+          const result = await imageStorage.uploadFile({
+            file: Buffer.from(buffer),
+            key: `prestations/other/${Date.now()}-${otherImage.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
+            contentType: otherImage.type || 'image/jpeg',
+          });
+          otherImageUrls.push(result.url);
+          console.log("Other image uploaded successfully:", result.url);
+        } catch (error) {
+          console.error("Error uploading other image:", error);
+          return NextResponse.json(
+            { error: "Failed to upload other image" },
+            { status: 500 }
+          );
+        }
       }
     }
 
@@ -99,7 +102,7 @@ export async function POST(request: Request) {
       name,
       description,
       bannerImage: bannerImageUrl || '',  // Ensure we always have a string
-      otherImage: otherImageUrl || '',    // Ensure we always have a string
+      otherImage: otherImageUrls.join(','),  // Join multiple URLs with comma
     };
 
     console.log("Creating prestation with data:", prestationData);

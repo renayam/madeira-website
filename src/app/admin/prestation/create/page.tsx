@@ -9,7 +9,7 @@ export default function PrestationCreateScreen() {
   const [pr, setPr] = useState<PrestationCreate>({
     name: "",
     bannerImage: "",
-    otherImage: "",
+    otherImage: [],
     description: "",
   });
 
@@ -38,13 +38,16 @@ export default function PrestationCreateScreen() {
   };
 
   const handleOtherImagesUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = Array.from(e.target.files || []);
+    const otherImages = files.filter(file => file.type.startsWith('image/'));
+    const otherImageUrls = otherImages.map(file => URL.createObjectURL(file));
+
+    if (otherImages.length > 0) {
       try {
         setPr({
           ...pr,
-          otherImage: URL.createObjectURL(file),
-          otherImageFile: file
+          otherImage: otherImageUrls,
+          otherImageFile: otherImages
         });
       } catch (error) {
         console.error("Error uploading other images:", error);
@@ -72,9 +75,12 @@ export default function PrestationCreateScreen() {
         formData.append("bannerImage", pr.bannerImageFile);
       }
 
-      if (pr.otherImageFile instanceof File) {
-        console.log("Appending other image:", pr.otherImageFile.name);
-        formData.append("otherImage", pr.otherImageFile);
+      // Handle multiple other images
+      if (pr.otherImageFile && Array.isArray(pr.otherImageFile)) {
+        console.log("Appending other images:", pr.otherImageFile.map(f => f.name));
+        pr.otherImageFile.forEach(file => {
+          formData.append("otherImage", file);
+        });
       }
 
       if (editingPrestation && editingPrestation.id) {
@@ -88,7 +94,7 @@ export default function PrestationCreateScreen() {
           setPr({
             name: "",
             bannerImage: "",
-            otherImage: "",
+            otherImage: [],
             description: "",
             bannerImageFile: null,
             otherImageFile: null,
@@ -103,7 +109,7 @@ export default function PrestationCreateScreen() {
           setPr({
             name: "",
             bannerImage: "",
-            otherImage: "",
+            otherImage: [],
             description: "",
             bannerImageFile: null,
             otherImageFile: null,
@@ -122,7 +128,7 @@ export default function PrestationCreateScreen() {
     setPr({
       name: prestation.name,
       bannerImage: prestation.bannerImage || "",
-      otherImage: prestation.otherImage,
+      otherImage: prestation.otherImage || [],
       description: prestation.description,
     });
   };
@@ -133,7 +139,7 @@ export default function PrestationCreateScreen() {
     setPr({
       name: "",
       bannerImage: "",
-      otherImage: "",
+      otherImage: [],
       description: "",
     });
   };
@@ -193,17 +199,36 @@ export default function PrestationCreateScreen() {
                   className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-800 p-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </label>
-              {pr?.otherImage && (
-                <div className="mt-2 flex justify-center">
-                  <Image
-                    src={pr.otherImage}
-                    alt="Other Image Preview"
-                    width={200}
-                    height={200}
-                    className="rounded-md object-cover"
-                  />
-                </div>
-              )}
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                {pr?.otherImage && pr.otherImage.map((imageUrl: string, index: number) => (
+                  <div key={index} className="relative">
+                    <Image
+                      src={imageUrl}
+                      alt={`Other Image Preview ${index + 1}`}
+                      width={200}
+                      height={200}
+                      className="rounded-md object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newOtherImages = pr.otherImage.filter((_, i: number) => i !== index);
+                        const newOtherImageFiles = pr.otherImageFile?.filter((_, i: number) => i !== index) || null;
+                        setPr({
+                          ...pr,
+                          otherImage: newOtherImages,
+                          otherImageFile: newOtherImageFiles
+                        });
+                      }}
+                      className="absolute right-2 top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-300">

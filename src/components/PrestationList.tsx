@@ -54,18 +54,18 @@ const PrestationList: React.FC = () => {
                 <p className="mb-2 text-gray-600">{prestation.description}</p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {typeof prestation.otherImage === 'string' && (
-                    <div className="relative h-16 w-16">
+                  {prestation.otherImage && prestation.otherImage.split(',').map((image, index) => (
+                    <div key={index} className="relative h-16 w-16">
                       <Image
-                        src={prestation.otherImage}
-                        alt="Image secondaire"
+                        src={image}
+                        alt={`Image secondaire ${index + 1}`}
                         layout="fill"
                         objectFit="cover"
                         className="cursor-pointer rounded-md"
-                        onClick={() => openImage(prestation.otherImage)}
+                        onClick={() => openImage(image)}
                       />
                     </div>
-                  )}
+                  ))}
                   {Array.isArray(prestation.otherImage) &&
                     prestation.otherImage.map((image: string, index: number) => (
                       <div key={index} className="relative h-16 w-16">
