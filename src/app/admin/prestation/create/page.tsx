@@ -192,13 +192,13 @@ export default function PrestationCreateScreen() {
         <div className="mx-auto max-w-lg rounded-lg bg-gray-950 p-6 shadow-md">
           <h1 className="mb-4 text-2xl font-bold text-white">
             {editingPrestation
-              ? "Modifier une Prestation"
-              : "Créer une Prestation"}
+              ? "Modifier une Realisation"
+              : "Créer une Realisation"}
           </h1>
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-300">
-                Nom de la Prestation :
+                Nom de la Realisation :
                 <input
                   type="text"
                   value={pr.name}
@@ -243,7 +243,7 @@ export default function PrestationCreateScreen() {
                 type="submit"
                 className="mt-4 w-full rounded-md bg-blue-600 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
               >
-                {editingPrestation ? "Mettre à jour" : "Créer une Prestation"}
+                {editingPrestation ? "Mettre à jour" : "Créer une Realisation"}
               </button>
 
               {editingPrestation && (
@@ -262,7 +262,7 @@ export default function PrestationCreateScreen() {
 
       <div className="w-1/3 bg-gray-900 p-6">
         <h2 className="mb-4 text-xl font-bold text-white">
-          Liste des Prestations
+          Liste des Realisations
         </h2>
         <PrestationList startEditing={startEditing} />
       </div>
@@ -283,13 +283,13 @@ function PrestationList({ startEditing }: { startEditing: (prestation: Prestatio
   }
 
   if (prestations.length === 0 || !prestations) {
-    return <p className="text-gray-400">Aucune prestation créée</p>;
+    return <p className="text-gray-400">Aucune realisation créée</p>;
   }
 
   return (
     <>
       {prestations.length === 0 ? (
-        <p className="text-gray-400">Aucune prestation créée</p>
+        <p className="text-gray-400">Aucune realisation créée</p>
       ) : (
         <>
           {prestations.map((prestation) => (

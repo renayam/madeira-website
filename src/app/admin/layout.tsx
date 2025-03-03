@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 const ADMIN_ROUTES = [
   {
     href: "/admin/prestation/create",
-    label: "Créer Prestation",
+    label: "Créer Realisation",
     icon: "➕",
   },
   {
