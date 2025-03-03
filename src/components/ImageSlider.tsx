@@ -109,11 +109,11 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 touch-none" 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 touch-none cursor-pointer" 
       onClick={onClose}
     >
       <div 
-        className="relative w-full h-full md:w-auto md:h-auto"
+        className="relative w-full h-full md:w-auto md:h-auto cursor-default"
         onClick={(e) => e.stopPropagation()}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -121,12 +121,10 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
       >
         {/* Close button */}
         <button
-          className="absolute right-4 top-4 z-50 p-2 text-2xl text-white hover:text-gray-300 md:-right-10 md:-top-10"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onClose();
-          }}
+          className="absolute right-4 top-4 z-50 p-3 text-3xl text-white hover:text-red-200 transition-colors duration-200 
+                     bg-red-500 hover:bg-red-600 rounded-full w-12 h-12 flex items-center justify-center
+                     md:right-4 md:top-4 shadow-lg"
+          onClick={onClose}
           aria-label="Close"
         >
           ✕
@@ -136,14 +134,20 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
         {images.length > 1 && (
           <>
             <button
-              className="hidden md:block absolute left-4 top-1/2 z-50 -translate-y-1/2 rounded-full bg-white/30 p-4 text-white hover:bg-white/50"
+              className="hidden md:flex absolute left-4 top-1/2 z-50 -translate-y-1/2 
+                         rounded-full bg-blue-500 hover:bg-blue-600 p-6 
+                         text-white text-3xl hover:text-white/90 transition-all duration-200
+                         items-center justify-center w-16 h-16 shadow-lg"
               onClick={(e) => handleButtonClick(e, 'prev')}
               aria-label="Previous image"
             >
               ←
             </button>
             <button
-              className="hidden md:block absolute right-4 top-1/2 z-50 -translate-y-1/2 rounded-full bg-white/30 p-4 text-white hover:bg-white/50"
+              className="hidden md:flex absolute right-4 top-1/2 z-50 -translate-y-1/2 
+                         rounded-full bg-blue-500 hover:bg-blue-600 p-6 
+                         text-white text-3xl hover:text-white/90 transition-all duration-200
+                         items-center justify-center w-16 h-16 shadow-lg"
               onClick={(e) => handleButtonClick(e, 'next')}
               aria-label="Next image"
             >
@@ -167,13 +171,16 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
         </div>
 
         {/* Image counter */}
-        <div className="absolute bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full bg-black/50 px-4 py-2 text-sm md:text-base text-white">
+        <div className="absolute bottom-4 left-1/2 z-50 -translate-x-1/2 
+                       rounded-full bg-black/50 px-6 py-3 
+                       text-base md:text-lg text-white font-medium">
           {currentIndex + 1} / {images.length}
         </div>
 
         {/* Swipe indicator - only shown on mobile */}
         {images.length > 1 && (
-          <div className="absolute bottom-16 left-1/2 z-50 -translate-x-1/2 text-white text-sm opacity-50 md:hidden">
+          <div className="absolute bottom-16 left-1/2 z-50 -translate-x-1/2 
+                         text-white text-sm bg-black/50 px-4 py-2 rounded-full md:hidden">
             Swipe left or right to navigate
           </div>
         )}
