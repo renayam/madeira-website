@@ -95,7 +95,30 @@ const ManagePortfolio: React.FC = () => {
     setIsLoading(true);
     setError(null);
     
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData();
+    
+    // Add basic fields
+    formData.append("title", data.title);
+    formData.append("description", data.description);
+    
+    // Add main image if exists
+    if (data.mainImageFile) {
+      formData.append("mainImage", data.mainImageFile);
+    }
+    
+    // Add other images if they exist
+    if (data.otherImageFile) {
+      data.otherImageFile.forEach((file) => {
+        formData.append("otherImage", file);
+      });
+    }
+    
+    // Add deleted images if in edit mode
+    if (editingPortfolio && data.deletedImages.length > 0) {
+      data.deletedImages.forEach((imageUrl) => {
+        formData.append("deletedImages", imageUrl);
+      });
+    }
     
     try {
       let result;
@@ -109,7 +132,20 @@ const ManagePortfolio: React.FC = () => {
         throw new Error("Failed to submit form");
       }
 
-      router.push("/admin/portfolio");
+      // Reset form and refresh the page
+      if (editingPortfolio) {
+        cancelEditing();
+      } else {
+        setData({
+          title: "",
+          description: "",
+          mainImage: null,
+          otherImage: [],
+          mainImageFile: null,
+          otherImageFile: null,
+          deletedImages: [],
+        });
+      }
       router.refresh();
     } catch (error) {
       setError(error instanceof Error ? error.message : "Failed to submit form");
@@ -146,86 +182,89 @@ const ManagePortfolio: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">
-          {editingPortfolio ? "Modifier le Portfolio" : "Créer un Portfolio"}
-        </h1>
+      <div className="flex gap-8">
+        <div className="w-2/3">
+          <h1 className="text-2xl font-bold mb-6">
+            {editingPortfolio ? "Modifier le Portfolio" : "Créer un Portfolio"}
+          </h1>
 
-        {error && (
-          <div className="mb-4 p-4 text-red-700 bg-red-100 rounded-md">
-            {error}
-          </div>
-        )}
+          {error && (
+            <div className="mb-4 p-4 text-red-700 bg-red-100 rounded-md">
+              {error}
+            </div>
+          )}
 
-        <form onSubmit={onSubmit}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Titre du Portfolio :
-              <input
-                type="text"
-                value={data.title}
-                onChange={(e) =>
-                  setData((prev) => ({ ...prev, title: e.target.value }))
-                }
-                required
-                className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
-              />
-            </label>
-          </div>
+          <form onSubmit={onSubmit}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Titre du Portfolio :
+                <input
+                  type="text"
+                  value={data.title}
+                  onChange={(e) =>
+                    setData((prev) => ({ ...prev, title: e.target.value }))
+                  }
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
+                />
+              </label>
+            </div>
 
-          <DragDropImageUpload
-            label="Image Principale :"
-            onImageUpload={handleMainImageUpload}
-            images={data.mainImage ? [data.mainImage] : []}
-            onRemoveImage={() => handleDeleteMainImage()}
-            multiple={false}
-          />
+            <DragDropImageUpload
+              label="Image Principale :"
+              onImageUpload={handleMainImageUpload}
+              images={data.mainImage ? [data.mainImage] : []}
+              onRemoveImage={() => handleDeleteMainImage()}
+              multiple={false}
+            />
 
-          <DragDropImageUpload
-            label="Autres Images :"
-            onImageUpload={handleOtherImagesUpload}
-            images={data.otherImage}
-            onRemoveImage={handleRemoveOtherImage}
-            multiple={true}
-          />
+            <DragDropImageUpload
+              label="Autres Images :"
+              onImageUpload={handleOtherImagesUpload}
+              images={data.otherImage}
+              onRemoveImage={handleRemoveOtherImage}
+              multiple={true}
+            />
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Description :
-              <textarea
-                value={data.description}
-                onChange={(e) =>
-                  setData((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                required
-                className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
-              />
-            </label>
-          </div>
-          <div className="mt-6">
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              {isLoading ? 'Chargement...' : editingPortfolio ? 'Mettre à jour' : 'Créer un Portfolio'}
-            </button>
-            {editingPortfolio && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Description :
+                <textarea
+                  value={data.description}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
+                />
+              </label>
+            </div>
+            <div className="mt-6">
               <button
-                type="button"
-                onClick={cancelEditing}
-                className="mt-4 w-full rounded-md bg-gray-600 py-2 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-500"
+                type="submit"
+                disabled={isLoading}
+                className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
-                Annuler
+                {isLoading ? 'Chargement...' : editingPortfolio ? 'Mettre à jour' : 'Créer un Portfolio'}
               </button>
-            )}
-          </div>
-        </form>
+              {editingPortfolio && (
+                <button
+                  type="button"
+                  onClick={cancelEditing}
+                  className="mt-4 w-full rounded-md bg-gray-600 py-2 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-500"
+                >
+                  Annuler
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
+        <PortfolioList onEdit={startEditing} />
       </div>
     </div>
   );
