@@ -1,9 +1,10 @@
 "use client";
 import React, { useEffect } from "react";
-import { useState, ChangeEvent } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { usePrestationContext } from "../../../../components/PrestationContext";
 import { Prestation, PrestationCreate } from "@/types/prestation";
+import DragDropImageUpload from "@/components/DragDropImageUpload";
 
 export default function PrestationCreateScreen() {
   const [pr, setPr] = useState<PrestationCreate>({
@@ -22,8 +23,8 @@ export default function PrestationCreateScreen() {
   const { AddPrestation, updatePrestation, removeOtherImage } =
     usePrestationContext();
 
-  const handleBannerImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleBannerImageUpload = (files: File[]) => {
+    const file = files[0];
     if (file) {
       try {
         setPr({
@@ -38,28 +39,24 @@ export default function PrestationCreateScreen() {
     }
   };
 
-  const handleOtherImagesUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const otherImages = files.filter(file => file.type.startsWith('image/'));
-    const otherImageUrls = otherImages.map(file => URL.createObjectURL(file));
-
-    if (otherImages.length > 0) {
+  const handleOtherImagesUpload = (files: File[]) => {
+    if (files.length > 0) {
       try {
-        // If we're editing, append new images to existing ones
+        const otherImageUrls = files.map(file => URL.createObjectURL(file));
+        
         if (editingPrestation) {
           const existingUrls = Array.isArray(pr.otherImage) ? pr.otherImage : [];
           const existingFiles = pr.otherImageFile || [];
           setPr({
             ...pr,
             otherImage: [...existingUrls, ...otherImageUrls],
-            otherImageFile: [...existingFiles, ...otherImages]
+            otherImageFile: [...existingFiles, ...files]
           });
         } else {
-          // For new prestations, just set the new images
           setPr({
             ...pr,
             otherImage: otherImageUrls,
-            otherImageFile: otherImages
+            otherImageFile: files
           });
         }
       } catch (error) {
@@ -211,62 +208,23 @@ export default function PrestationCreateScreen() {
                 />
               </label>
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-300">
-                Image de Bannière :
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleBannerImageUpload}
-                  className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-800 p-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </label>
-              {pr.bannerImage && (
-                <div className="mt-2 flex justify-center">
-                  <Image
-                    src={pr.bannerImage}
-                    alt="Banner Preview"
-                    width={200}
-                    height={200}
-                    className="rounded-md object-cover"
-                  />
-                </div>
-              )}
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-300">
-                Autres Images :
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleOtherImagesUpload}
-                  className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-800 p-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </label>
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                {pr?.otherImage && pr.otherImage.map((imageUrl: string, index: number) => (
-                  <div key={index} className="relative">
-                    <Image
-                      src={imageUrl}
-                      alt={`Other Image Preview ${index + 1}`}
-                      width={200}
-                      height={200}
-                      className="rounded-md object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveOtherImage(index, imageUrl)}
-                      className="absolute right-2 top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
+
+            <DragDropImageUpload
+              label="Image de Bannière :"
+              onImageUpload={handleBannerImageUpload}
+              images={pr.bannerImage ? [pr.bannerImage] : []}
+              onRemoveImage={() => setPr(prev => ({ ...prev, bannerImage: "", bannerImageFile: null }))}
+              multiple={false}
+            />
+
+            <DragDropImageUpload
+              label="Autres Images :"
+              onImageUpload={handleOtherImagesUpload}
+              images={pr.otherImage}
+              onRemoveImage={handleRemoveOtherImage}
+              multiple={true}
+            />
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-300">
                 Description :

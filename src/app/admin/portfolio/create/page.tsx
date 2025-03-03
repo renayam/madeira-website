@@ -1,9 +1,10 @@
 "use client";
 import Image from "next/image";
 import React, { useState } from "react";
-import useImageExpand from "@/hook/useImageExpand";
 import { usePortfolio } from "@/components/PortfolioContext";
 import { PortfolioItem } from "@/types/portfolio";
+import { useRouter } from "next/navigation";
+import DragDropImageUpload from "@/components/DragDropImageUpload";
 
 type Data = {
   title: string;
@@ -27,11 +28,12 @@ const ManagePortfolio: React.FC = () => {
     deletedImages: [],
   });
   const [editingPortfolio, setEditingPortfolio] = useState<PortfolioItem | null>(null);
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const { expandedImage, closeImage } = useImageExpand();
-
-  const handleMainImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleMainImageUpload = (files: File[]) => {
+    const file = files[0];
     if (file) {
       setData((prev) => ({
         ...prev,
@@ -41,28 +43,24 @@ const ManagePortfolio: React.FC = () => {
     }
   };
 
-  const handleOtherImagesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const otherImages = files.filter(file => file.type.startsWith('image/'));
-    const otherImageUrls = otherImages.map(file => URL.createObjectURL(file));
-
-    if (otherImages.length > 0) {
+  const handleOtherImagesUpload = (files: File[]) => {
+    if (files.length > 0) {
       try {
-        // If we're editing, append new images to existing ones
+        const otherImageUrls = files.map(file => URL.createObjectURL(file));
+        
         if (editingPortfolio) {
           const existingUrls = Array.isArray(data.otherImage) ? data.otherImage : [];
           const existingFiles = data.otherImageFile || [];
           setData({
             ...data,
             otherImage: [...existingUrls, ...otherImageUrls],
-            otherImageFile: [...existingFiles, ...otherImages]
+            otherImageFile: [...existingFiles, ...files]
           });
         } else {
-          // For new portfolios, just set the new images
           setData({
             ...data,
             otherImage: otherImageUrls,
-            otherImageFile: otherImages
+            otherImageFile: files
           });
         }
       } catch (error) {
@@ -77,7 +75,6 @@ const ManagePortfolio: React.FC = () => {
 
   const handleRemoveOtherImage = (index: number, imageUrl: string) => {
     if (editingPortfolio?.id) {
-      // Instead of deleting immediately, add to deletedImages array
       setData(prev => ({
         ...prev,
         otherImage: prev.otherImage.filter((_, i) => i !== index),
@@ -85,7 +82,6 @@ const ManagePortfolio: React.FC = () => {
         deletedImages: [...(prev.deletedImages || []), imageUrl]
       }));
     } else {
-      // For new portfolios, just update local state
       setData(prev => ({
         ...prev,
         otherImage: prev.otherImage.filter((_, i) => i !== index),
@@ -94,57 +90,31 @@ const ManagePortfolio: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!data.title) {
-      alert("Le titre est requis.");
-      return;
-    }
-
+    setIsLoading(true);
+    setError(null);
+    
+    const formData = new FormData(event.currentTarget);
+    
     try {
-      const formData = new FormData();
-      formData.append("title", data.title);
-      formData.append("description", data.description);
-
-      // Only append file if it exists
-      if (data.mainImageFile instanceof File) {
-        console.log("Appending main image:", data.mainImageFile.name);
-        formData.append("mainImage", data.mainImageFile);
-      }
-
-      // Handle multiple other images
-      if (data.otherImageFile && Array.isArray(data.otherImageFile)) {
-        console.log("Appending other images:", data.otherImageFile.map(f => f.name));
-        data.otherImageFile.forEach(file => {
-          formData.append("otherImage", file);
-        });
-      }
-
       let result;
       if (editingPortfolio && editingPortfolio.id) {
-        console.log("Updating portfolio item...");
         result = await updatePortfolioItem(editingPortfolio.id, formData);
       } else {
-        console.log("Creating new portfolio item...");
         result = await addPortfolioItem(formData);
       }
 
-      if (result) {
-        console.log("Portfolio operation successful:", result);
-        setEditingPortfolio(null);
-        setData({
-          title: "",
-          description: "",
-          mainImage: null,
-          otherImage: [],
-          mainImageFile: null,
-          otherImageFile: null,
-          deletedImages: [],
-        });
+      if (!result) {
+        throw new Error("Failed to submit form");
       }
+
+      router.push("/admin/portfolio");
+      router.refresh();
     } catch (error) {
-      console.error("Error submitting portfolio:", error);
-      alert("Une erreur s'est produite lors de la sauvegarde du portfolio.");
+      setError(error instanceof Error ? error.message : "Failed to submit form");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -175,143 +145,87 @@ const ManagePortfolio: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-primary p-6">
-      <div className="flex w-full space-x-6">
-        {/* Formulaire de création */}
-        <div className="w-2/3 rounded-lg bg-gray-950 p-6 shadow-md">
-          <h1 className="mb-4 text-2xl font-bold">
-            {editingPortfolio ? "Modifier le Portfolio" : "Créer un Portfolio"}
-          </h1>
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">
-                Titre du Portfolio :
-                <input
-                  type="text"
-                  value={data.title}
-                  onChange={(e) =>
-                    setData((prev) => ({ ...prev, title: e.target.value }))
-                  }
-                  required
-                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
-                />
-              </label>
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">
-                Image Principale :
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleMainImageChange}
-                  required={!editingPortfolio}
-                  className="mt-1 block w-full cursor-pointer rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
-                />
-              </label>
-              {data?.mainImage && (
-                <div className="relative mt-2">
-                  <h3 className="mb-3 text-base sm:text-lg font-semibold text-white">{data.title || "Sans titre"}</h3>
-                  <Image
-                    src={data.mainImage}
-                    alt="Aperçu de l'Image Principale"
-                    width={600}
-                    height={400}
-                    className="h-auto w-full rounded-md aspect-[4/3] object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleDeleteMainImage}
-                    className="absolute right-2 top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
-                  >
-                    X
-                  </button>
-                </div>
-              )}
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">
-                Autres Images :
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleOtherImagesUpload}
-                  className="mt-1 block w-full cursor-pointer rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
-                />
-              </label>
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                {data?.otherImage && data.otherImage.map((imageUrl: string, index: number) => (
-                  <div key={index} className="relative">
-                    <Image
-                      src={imageUrl}
-                      alt={`Other Image Preview ${index + 1}`}
-                      width={200}
-                      height={200}
-                      className="rounded-md object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveOtherImage(index, imageUrl)}
-                      className="absolute right-2 top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">
-                Description :
-                <textarea
-                  value={data.description}
-                  onChange={(e) =>
-                    setData((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                  required
-                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
-                />
-              </label>
-            </div>
-            <div className="flex space-x-4">
-              <button
-                type="submit"
-                className="mt-4 w-full rounded-md bg-blue-600 py-2 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
-              >
-                {editingPortfolio ? "Mettre à jour" : "Créer un Portfolio"}
-              </button>
-              {editingPortfolio && (
-                <button
-                  type="button"
-                  onClick={cancelEditing}
-                  className="mt-4 w-full rounded-md bg-gray-600 py-2 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-500"
-                >
-                  Annuler
-                </button>
-              )}
-            </div>
-          </form>
-        </div>
-        <PortfolioList onEdit={startEditing} />
-        {expandedImage && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
-            onClick={closeImage}
-          >
-            <Image
-              src={expandedImage}
-              alt="Image Agrandie"
-              width={800}
-              height={600}
-              className="h-auto max-h-full w-auto max-w-full"
-            />
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6">
+          {editingPortfolio ? "Modifier le Portfolio" : "Créer un Portfolio"}
+        </h1>
+
+        {error && (
+          <div className="mb-4 p-4 text-red-700 bg-red-100 rounded-md">
+            {error}
           </div>
         )}
+
+        <form onSubmit={onSubmit}>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Titre du Portfolio :
+              <input
+                type="text"
+                value={data.title}
+                onChange={(e) =>
+                  setData((prev) => ({ ...prev, title: e.target.value }))
+                }
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
+              />
+            </label>
+          </div>
+
+          <DragDropImageUpload
+            label="Image Principale :"
+            onImageUpload={handleMainImageUpload}
+            images={data.mainImage ? [data.mainImage] : []}
+            onRemoveImage={() => handleDeleteMainImage()}
+            multiple={false}
+          />
+
+          <DragDropImageUpload
+            label="Autres Images :"
+            onImageUpload={handleOtherImagesUpload}
+            images={data.otherImage}
+            onRemoveImage={handleRemoveOtherImage}
+            multiple={true}
+          />
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Description :
+              <textarea
+                value={data.description}
+                onChange={(e) =>
+                  setData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
+              />
+            </label>
+          </div>
+          <div className="mt-6">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {isLoading ? 'Chargement...' : editingPortfolio ? 'Mettre à jour' : 'Créer un Portfolio'}
+            </button>
+            {editingPortfolio && (
+              <button
+                type="button"
+                onClick={cancelEditing}
+                className="mt-4 w-full rounded-md bg-gray-600 py-2 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-500"
+              >
+                Annuler
+              </button>
+            )}
+          </div>
+        </form>
       </div>
     </div>
   );
@@ -341,13 +255,8 @@ const PortfolioList = ({ onEdit }: { onEdit: (portfolio: PortfolioItem) => void 
 
 function ViewPortfolio({ item, onEdit }: { item: PortfolioItem; onEdit: (portfolio: PortfolioItem) => void }) {
   const { deletePortfolioItem } = usePortfolio();
-  const { openImage } = useImageExpand();
 
   if (!item || typeof item.id !== 'number') return null;
-
-  const handleImageClick = (imageUrl: string) => {
-    openImage(imageUrl);
-  };
 
   return (
     <div className="mb-4 rounded-lg bg-gray-900 shadow-md overflow-hidden">
@@ -360,7 +269,6 @@ function ViewPortfolio({ item, onEdit }: { item: PortfolioItem; onEdit: (portfol
             width={300}
             height={200}
             className="w-full cursor-pointer rounded-md object-cover aspect-video"
-            onClick={() => handleImageClick(item.mainImage)}
           />
         </div>
         {Array.isArray(item.otherImage) && item.otherImage.length > 0 && (
@@ -373,7 +281,6 @@ function ViewPortfolio({ item, onEdit }: { item: PortfolioItem; onEdit: (portfol
                   layout="fill"
                   objectFit="cover"
                   className="cursor-pointer rounded-md"
-                  onClick={() => handleImageClick(imageUrl)}
                 />
               </div>
             ))}
