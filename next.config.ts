@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  webpack: (config, { isServer }) => {
+  turbopack: {},
+  webpack: (config: any, { isServer }: { isServer: boolean }) => {
     if (!isServer) {
       // Ne pas inclure les modules Sequelize côté client
       config.resolve.fallback = {
@@ -13,23 +14,23 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
-  // Ajoutez ces configurations pour gérer les images
+  // Configurations pour les images distantes
   images: {
-    domains: ['localhost', 's3.fr-par.scw.cloud'], // Added Scaleway S3 domain
     remotePatterns: [
       {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '3000',
-        pathname: '/api/**',
+        protocol: "http",
+        hostname: "localhost",
+        port: "3000",
+        pathname: "/api/**",
+      },
+      {
+        protocol: "https",
+        hostname: "s3.fr-par.scw.cloud",
       },
     ],
   },
-  experimental: {
-    serverComponentsExternalPackages: ["sequelize", "sequelize-typescript"],
-  },
+  // Packages externes pour le server component
+  serverExternalPackages: ["sequelize", "sequelize-typescript"],
 };
 
 export default nextConfig;
-
-

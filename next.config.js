@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {},
   webpack: (config, { isServer }) => {
     if (!isServer) {
       // Don't bundle sequelize for client-side
@@ -9,36 +10,38 @@ const nextConfig = {
         net: false,
         tls: false,
         dns: false,
-        'pg-hstore': false,
+        "pg-hstore": false,
         tedious: false,
         nock: false,
-        'aws-sdk': false,
-        'mock-aws-s3': false,
-        'mysql2': false,
+        "aws-sdk": false,
+        "mock-aws-s3": false,
+        mysql2: false,
         sqlite3: false,
-        'pg-native': false,
-        '@sequelize/core': false,
+        "pg-native": false,
+        "@sequelize/core": false,
         sequelize: false,
         mariadb: false,
       };
     }
     return config;
   },
-  // Ajoutez ces configurations pour gérer les images
+  // Configurations pour les images distantes
   images: {
-    domains: ['localhost', 's3.fr-par.scw.cloud'], // Added Scaleway S3 domain
     remotePatterns: [
       {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '3000',
-        pathname: '/api/**',
+        protocol: "http",
+        hostname: "localhost",
+        port: "3000",
+        pathname: "/api/**",
+      },
+      {
+        protocol: "https",
+        hostname: "s3.fr-par.scw.cloud",
       },
     ],
   },
-  experimental: {
-    serverComponentsExternalPackages: ['sequelize', 'mariadb'],
-  },
-}
+  // Packages externes pour le server components
+  serverExternalPackages: ["sequelize", "mariadb"],
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
