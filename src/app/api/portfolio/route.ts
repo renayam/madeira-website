@@ -5,7 +5,10 @@ import { uploadFile } from "@/service/xbackbone";
 
 function transformPortfolioImages(item: any) {
   return {
-    ...item,
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    altText: item.altText,
     mainImage: getProxiedImageUrl(item.mainImage),
     otherImage: Array.isArray(item.otherImage)
       ? item.otherImage.map((url: string) => getProxiedImageUrl(url))
@@ -14,7 +17,7 @@ function transformPortfolioImages(item: any) {
 }
 
 export async function GET() {
-  const items = await PortfolioItem.findAll();
+  const items = await PortfolioItem.findAll({ raw: true });
   return NextResponse.json(items.map(transformPortfolioImages));
 }
 
@@ -42,5 +45,5 @@ export async function POST(request: Request) {
     altText,
   } as any);
 
-  return NextResponse.json(transformPortfolioImages(item.toJSON()));
+  return NextResponse.json(transformPortfolioImages(item.get({ plain: true })));
 }
