@@ -1,6 +1,6 @@
 import { DataTypes, Model, ModelAttributeColumnOptions } from "sequelize";
 import { PortfolioItemModel } from "../types/portfolio";
-import { DatabaseService } from "../service/storage";
+import { DatabaseService } from "../service/storage.server";
 
 describe.skip("PortfolioItemModel", () => {
   it("should be correctly initialized from Sequelize instance", () => {
@@ -92,5 +92,5 @@ describe.skip("PortfolioItemModel", () => {
     );
   });
 
-  describe("query", () => { });
+  describe("query", () => {});
 });

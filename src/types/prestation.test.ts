@@ -1,6 +1,6 @@
 import { DataTypes, Model, ModelAttributeColumnOptions } from "sequelize";
 import { Prestation, PrestationModel } from "../types/prestation";
-import { DatabaseService } from "../service/storage";
+import { DatabaseService } from "../service/storage.server";
 
 describe.skip("PrestationModel", () => {
   it("should be correctly initialized from Sequelize instance", () => {
@@ -86,5 +86,5 @@ describe.skip("PrestationModel", () => {
     );
   });
 
-  describe("query", () => { });
+  describe("query", () => {});
 });

@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from 'react';
-import Image from 'next/image';
+import React, { useCallback, useState } from "react";
+import Image from "next/image";
 
 interface DragDropImageUploadProps {
   onImageUpload: (files: File[]) => void;
@@ -10,13 +10,77 @@ interface DragDropImageUploadProps {
   className?: string;
 }
 
+const MAX_DIMENSION = 1200;
+const QUALITY = 0.8;
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+
+const compressImage = (file: File): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+      reject(new Error("Canvas context not available"));
+      return;
+    }
+
+    img.onload = () => {
+      let { width, height } = img;
+
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        if (width > height) {
+          height = Math.round((height * MAX_DIMENSION) / width);
+          width = MAX_DIMENSION;
+        } else {
+          width = Math.round((width * MAX_DIMENSION) / height);
+          height = MAX_DIMENSION;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const outputType = file.type === "image/png" ? "image/png" : "image/jpeg";
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error("Canvas to blob conversion failed"));
+            return;
+          }
+
+          const compressedFile = new File([blob], file.name, {
+            type: outputType,
+            lastModified: Date.now(),
+          });
+
+          resolve(compressedFile);
+        },
+        outputType,
+        QUALITY,
+      );
+    };
+
+    img.onerror = () => reject(new Error("Image loading failed"));
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error("File reading failed"));
+    reader.readAsDataURL(file);
+  });
+};
+
 const DragDropImageUpload: React.FC<DragDropImageUploadProps> = ({
   onImageUpload,
   images,
   onRemoveImage,
   label,
   multiple = false,
-  className = '',
+  className = "",
 }) => {
   const [isDragging, setIsDragging] = useState(false);
 
@@ -38,41 +102,67 @@ const DragDropImageUpload: React.FC<DragDropImageUploadProps> = ({
   }, []);
 
   const handleDrop = useCallback(
-    (e: React.DragEvent<HTMLDivElement>) => {
+    async (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
       e.stopPropagation();
       setIsDragging(false);
 
-      const files = Array.from(e.dataTransfer.files).filter(file =>
-        file.type.startsWith('image/')
+      const files = Array.from(e.dataTransfer.files).filter((file) =>
+        file.type.startsWith("image/"),
       );
+
+      // Check file size
+      const oversizedFiles = files.filter((file) => file.size > MAX_FILE_SIZE);
+      if (oversizedFiles.length > 0) {
+        alert(
+          `Les fichiers suivants dépassent la limite de 2MB : ${oversizedFiles.map((f) => f.name).join(", ")}`,
+        );
+        return;
+      }
 
       if (files.length > 0) {
         if (!multiple && files.length > 1) {
-          alert('Veuillez ne déposer qu\'une seule image');
+          alert("Veuillez ne déposer qu'une seule image");
           return;
         }
-        onImageUpload(files);
+
+        const compressedFiles = await Promise.all(
+          files.map((file) => compressImage(file)),
+        );
+        onImageUpload(compressedFiles);
       }
     },
-    [multiple, onImageUpload]
+    [multiple, onImageUpload],
   );
 
   const handleFileInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(e.target.files || []).filter(file =>
-        file.type.startsWith('image/')
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(e.target.files || []).filter((file) =>
+        file.type.startsWith("image/"),
       );
+
+      // Check file size
+      const oversizedFiles = files.filter((file) => file.size > MAX_FILE_SIZE);
+      if (oversizedFiles.length > 0) {
+        alert(
+          `Les fichiers suivants dépassent la limite de 2MB : ${oversizedFiles.map((f) => f.name).join(", ")}`,
+        );
+        return;
+      }
 
       if (files.length > 0) {
         if (!multiple && files.length > 1) {
-          alert('Veuillez ne sélectionner qu\'une seule image');
+          alert("Veuillez ne sélectionner qu'une seule image");
           return;
         }
-        onImageUpload(files);
+
+        const compressedFiles = await Promise.all(
+          files.map((file) => compressImage(file)),
+        );
+        onImageUpload(compressedFiles);
       }
     },
-    [multiple, onImageUpload]
+    [multiple, onImageUpload],
   );
 
   return (
@@ -80,11 +170,11 @@ const DragDropImageUpload: React.FC<DragDropImageUploadProps> = ({
       <label className="block text-sm font-medium text-gray-300">
         {label}
         <div
-          className={`mt-1 flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors
-            ${isDragging
-              ? 'border-blue-500 bg-blue-50/5'
-              : 'border-gray-300 hover:border-blue-500'
-            }`}
+          className={`mt-1 flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors ${
+            isDragging
+              ? "border-blue-500 bg-blue-50/5"
+              : "border-gray-300 hover:border-blue-500"
+          }`}
           onDragEnter={handleDragEnter}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -105,7 +195,7 @@ const DragDropImageUpload: React.FC<DragDropImageUploadProps> = ({
               />
             </svg>
             <p className="mt-1 text-sm text-gray-400">
-              Glissez-déposez {multiple ? 'des images' : 'une image'} ici, ou{' '}
+              Glissez-déposez {multiple ? "des images" : "une image"} ici, ou{" "}
               <label className="cursor-pointer text-blue-500 hover:text-blue-400">
                 parcourez
                 <input
@@ -117,13 +207,17 @@ const DragDropImageUpload: React.FC<DragDropImageUploadProps> = ({
                 />
               </label>
             </p>
-            <p className="mt-1 text-xs text-gray-500">PNG, JPG, GIF jusqu'à 10MB</p>
+            <p className="mt-1 text-xs text-gray-500">
+              PNG, JPG, GIF jusqu'à 2MB
+            </p>
           </div>
         </div>
       </label>
 
       {images.length > 0 && (
-        <div className={`mt-4 grid ${multiple ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
+        <div
+          className={`mt-4 grid ${multiple ? "grid-cols-2" : "grid-cols-1"} gap-4`}
+        >
           {images.map((imageUrl, index) => (
             <div key={index} className="relative">
               <Image
@@ -163,4 +257,4 @@ const DragDropImageUpload: React.FC<DragDropImageUploadProps> = ({
   );
 };
 
-export default DragDropImageUpload; 
+export default DragDropImageUpload;

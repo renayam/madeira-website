@@ -1,7 +1,7 @@
 import { DatabaseService } from "@/service/storage.server";
 import { Prestation, PrestationModel } from "@/types/prestation";
 import { NextResponse } from "next/server";
-import { imageStorage } from "@/service/minio";
+import { uploadFile } from "@/service/xbackbone";
 
 export async function GET() {
   try {
@@ -25,7 +25,10 @@ export async function POST(request: Request) {
     // Log the received data for debugging
     console.log("Received FormData entries:");
     for (const [key, value] of formData.entries()) {
-      console.log(`${key}:`, value instanceof File ? `File: ${value.name}` : value);
+      console.log(
+        `${key}:`,
+        value instanceof File ? `File: ${value.name}` : value,
+      );
     }
 
     // Extract and validate required fields
@@ -36,14 +39,14 @@ export async function POST(request: Request) {
     if (!name || typeof name !== "string") {
       return NextResponse.json(
         { error: "Name is required and must be a string" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!description || typeof description !== "string") {
       return NextResponse.json(
         { error: "Description is required and must be a string" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -54,18 +57,16 @@ export async function POST(request: Request) {
     if (bannerImage && bannerImage instanceof File) {
       try {
         const buffer = await bannerImage.arrayBuffer();
-        const result = await imageStorage.uploadFile({
-          file: Buffer.from(buffer),
-          key: `prestations/banner/${Date.now()}-${bannerImage.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
-          contentType: bannerImage.type || 'image/jpeg',
-        });
-        bannerImageUrl = result.url;
+        bannerImageUrl = await uploadFile(
+          Buffer.from(buffer),
+          `prestations/banner/${Date.now()}-${bannerImage.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`,
+        );
         console.log("Banner image uploaded successfully:", bannerImageUrl);
       } catch (error) {
         console.error("Error uploading banner image:", error);
         return NextResponse.json(
           { error: "Failed to upload banner image" },
-          { status: 500 }
+          { status: 500 },
         );
       }
     }
@@ -75,18 +76,17 @@ export async function POST(request: Request) {
       if (otherImage instanceof File) {
         try {
           const buffer = await otherImage.arrayBuffer();
-          const result = await imageStorage.uploadFile({
-            file: Buffer.from(buffer),
-            key: `prestations/other/${Date.now()}-${otherImage.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
-            contentType: otherImage.type || 'image/jpeg',
-          });
-          otherImageUrls.push(result.url);
-          console.log("Other image uploaded successfully:", result.url);
+          const result = await uploadFile(
+            Buffer.from(buffer),
+            `prestations/other/${Date.now()}-${otherImage.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`,
+          );
+          otherImageUrls.push(result);
+          console.log("Other image uploaded successfully:", result);
         } catch (error) {
           console.error("Error uploading other image:", error);
           return NextResponse.json(
             { error: "Failed to upload other image" },
-            { status: 500 }
+            { status: 500 },
           );
         }
       }
@@ -100,8 +100,8 @@ export async function POST(request: Request) {
     const prestationData: Prestation = {
       name,
       description,
-      bannerImage: bannerImageUrl || '',  // Ensure we always have a string
-      otherImage: otherImageUrls.join(','),  // Join multiple URLs with comma
+      bannerImage: bannerImageUrl || "", // Ensure we always have a string
+      otherImage: otherImageUrls.join(","), // Join multiple URLs with comma
     };
 
     console.log("Creating prestation with data:", prestationData);
@@ -113,15 +113,21 @@ export async function POST(request: Request) {
     } catch (dbError) {
       console.error("Database error:", dbError);
       return NextResponse.json(
-        { error: "Failed to save prestation to database", details: dbError instanceof Error ? dbError.message : String(dbError) },
-        { status: 500 }
+        {
+          error: "Failed to save prestation to database",
+          details: dbError instanceof Error ? dbError.message : String(dbError),
+        },
+        { status: 500 },
       );
     }
   } catch (error) {
     console.error("Error creating prestation:", error);
     return NextResponse.json(
-      { error: "Failed to create prestation", details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
+      {
+        error: "Failed to create prestation",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
     );
   }
 }

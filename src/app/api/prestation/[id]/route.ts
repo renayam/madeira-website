@@ -2,12 +2,12 @@ import { DatabaseService } from "../../../../service/storage.server";
 import { PrestationModel, Prestation } from "@/types/prestation";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { imageStorage } from "@/service/minio";
+import { uploadFile } from "@/service/xbackbone";
 import { Model } from "sequelize";
 
 // Interface for the database model instance
 interface PrestationInstance extends Model<Prestation>, Prestation {
-  getDataValue(key: 'otherImage'): string;
+  getDataValue(key: "otherImage"): string;
   getDataValue(key: string): string | number | undefined;
 }
 
@@ -42,7 +42,7 @@ export async function DELETE(request: NextRequest): Promise<Response> {
     if (!prestation) {
       return NextResponse.json(
         { error: "Prestation not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -52,7 +52,7 @@ export async function DELETE(request: NextRequest): Promise<Response> {
     // Return successful response
     return NextResponse.json(
       { message: "Prestation successfully deleted" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Error deleting prestation:", error);
@@ -62,7 +62,7 @@ export async function DELETE(request: NextRequest): Promise<Response> {
         error: "Failed to delete the prestation",
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -71,7 +71,7 @@ export async function PUT(request: NextRequest) {
   console.log("Starting PUT request handler");
   const id = request.nextUrl.pathname.split("/").pop();
   console.log("Extracted ID:", id);
-  
+
   if (!id) {
     console.log("No ID provided in request");
     return NextResponse.json({ error: "No ID provided" }, { status: 400 });
@@ -80,11 +80,14 @@ export async function PUT(request: NextRequest) {
   try {
     console.log("Parsing FormData from request");
     const formData = await request.formData();
-    
+
     // Log the received data for debugging
     console.log("Received FormData entries:");
     for (const [key, value] of formData.entries()) {
-      console.log(`${key}:`, value instanceof File ? `File: ${value.name}` : value);
+      console.log(
+        `${key}:`,
+        value instanceof File ? `File: ${value.name}` : value,
+      );
     }
 
     // Extract fields from formData
@@ -106,32 +109,35 @@ export async function PUT(request: NextRequest) {
     if (bannerImage instanceof File) {
       try {
         const buffer = await bannerImage.arrayBuffer();
-        const result = await imageStorage.uploadFile({
-          file: Buffer.from(buffer),
-          key: `prestations/banner/${Date.now()}-${bannerImage.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
-          contentType: bannerImage.type || 'image/jpeg',
-        });
-        requestBody.bannerImage = result.url;
-        console.log("Banner image uploaded successfully:", result.url);
+        requestBody.bannerImage = await uploadFile(
+          Buffer.from(buffer),
+          `prestations/banner/${Date.now()}-${bannerImage.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`,
+        );
+        console.log(
+          "Banner image uploaded successfully:",
+          requestBody.bannerImage,
+        );
       } catch (error) {
         console.error("Error uploading banner image:", error);
         return NextResponse.json(
           { error: "Failed to upload banner image" },
-          { status: 500 }
+          { status: 500 },
         );
       }
     }
 
     // Handle other images
     const otherImageUrls: string[] = [];
-    
+
     // First, get the existing prestation to access current images
     console.log("Getting database connection");
     const con = DatabaseService.getInstance();
     await PrestationModel.initialize(con);
-    
+
     console.log("Finding prestation with ID:", id);
-    const existingPrestation = await PrestationModel.findByPk(id) as PrestationInstance | null;
+    const existingPrestation = (await PrestationModel.findByPk(
+      id,
+    )) as PrestationInstance | null;
 
     if (!existingPrestation) {
       console.log("Prestation not found with ID:", id);
@@ -146,24 +152,23 @@ export async function PUT(request: NextRequest) {
     if (Array.isArray(currentImages)) {
       otherImageUrls.push(...currentImages);
     }
-    
+
     // Upload and add new images
     for (const newImage of newOtherImages) {
       if (newImage instanceof File) {
         try {
           const buffer = await newImage.arrayBuffer();
-          const result = await imageStorage.uploadFile({
-            file: Buffer.from(buffer),
-            key: `prestations/other/${Date.now()}-${newImage.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
-            contentType: newImage.type || 'image/jpeg',
-          });
-          otherImageUrls.push(result.url);
-          console.log("Other image uploaded successfully:", result.url);
+          const result = await uploadFile(
+            Buffer.from(buffer),
+            `prestations/other/${Date.now()}-${newImage.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`,
+          );
+          otherImageUrls.push(result);
+          console.log("Other image uploaded successfully:", result);
         } catch (error) {
           console.error("Error uploading other image:", error);
           return NextResponse.json(
             { error: "Failed to upload other image" },
-            { status: 500 }
+            { status: 500 },
           );
         }
       }
@@ -174,17 +179,25 @@ export async function PUT(request: NextRequest) {
       requestBody.otherImage = otherImageUrls;
     }
 
-    console.log("Updating prestation with body:", JSON.stringify(requestBody, null, 2));
+    console.log(
+      "Updating prestation with body:",
+      JSON.stringify(requestBody, null, 2),
+    );
     // Perform the update
-    const updatedPrestation = await existingPrestation.update(requestBody) as PrestationInstance;
+    const updatedPrestation = (await existingPrestation.update(
+      requestBody,
+    )) as PrestationInstance;
 
     // Get the raw value before it's processed by the getter
-    const rawOtherImage = updatedPrestation.getDataValue('otherImage');
-    
+    const rawOtherImage = updatedPrestation.getDataValue("otherImage");
+
     // Convert the response to include parsed otherImage array
     const response = {
       ...updatedPrestation.toJSON(),
-      otherImage: typeof rawOtherImage === 'string' ? rawOtherImage.split(',').filter(Boolean) : []
+      otherImage:
+        typeof rawOtherImage === "string"
+          ? rawOtherImage.split(",").filter(Boolean)
+          : [],
     };
 
     console.log("Successfully updated prestation:", response.id);
