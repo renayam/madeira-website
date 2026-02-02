@@ -1,21 +1,38 @@
 "use client";
 
 import React, { useState, FormEvent } from "react";
-import { NextPage } from "next";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
-const AdminPage: NextPage = () => {
+export default function AdminPage() {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    if (username === "admin" && password === "p") {
-      redirect("/admin/prestation/create");
-    } else {
-      setError("Invalid username or password");
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        router.push("/admin/prestation/create");
+      } else {
+        setError(data.error || "Invalid username or password");
+      }
+    } catch {
+      setError("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -73,14 +90,13 @@ const AdminPage: NextPage = () => {
           )}
           <button
             type="submit"
-            className="w-full rounded-md bg-white py-2 font-bold text-gray-900 transition duration-300 hover:bg-gray-300"
+            disabled={loading}
+            className="w-full rounded-md bg-white py-2 font-bold text-gray-900 transition duration-300 hover:bg-gray-300 disabled:opacity-50"
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
       </div>
     </div>
   );
-};
-
-export default AdminPage;
+}

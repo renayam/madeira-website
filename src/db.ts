@@ -1,6 +1,7 @@
 import { Sequelize } from "sequelize";
 import { PortfolioItemModel } from "@/types/portfolio";
 import { PrestationModel } from "@/types/prestation";
+import { UserModel } from "@/types/user";
 
 const config = {
   host: process.env.DB_HOST || "localhost",
@@ -21,9 +22,11 @@ export const sequelize = new Sequelize({
 
 PortfolioItemModel.initModel(sequelize);
 PrestationModel.initModel(sequelize);
+UserModel.initModel(sequelize);
 
 export const PortfolioItem = PortfolioItemModel;
 export const Prestation = PrestationModel;
+export const User = UserModel;
 
 export async function connect(): Promise<void> {
   await sequelize.authenticate();
