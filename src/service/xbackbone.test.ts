@@ -46,6 +46,8 @@ describe("XBackBone Integration Tests", () => {
 
       global.fetch = jest.fn().mockResolvedValueOnce({
         ok: true,
+        status: 200,
+        text: async () => JSON.stringify({ url: mockUrl }),
         json: async () => ({ url: mockUrl }),
       });
 
@@ -90,6 +92,8 @@ describe("XBackBone Integration Tests", () => {
 
       global.fetch = jest.fn().mockResolvedValueOnce({
         ok: true,
+        status: 200,
+        text: async () => JSON.stringify({ error: "Something went wrong" }),
         json: async () => ({ error: "Something went wrong" }),
       });
 
@@ -163,6 +167,8 @@ describe("XBackBone Integration Tests", () => {
 
       global.fetch = jest.fn().mockResolvedValueOnce({
         ok: true,
+        status: 200,
+        text: async () => JSON.stringify({ url: mockUrl }),
         json: async () => ({ url: mockUrl }),
       });
 
