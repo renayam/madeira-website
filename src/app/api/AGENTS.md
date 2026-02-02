@@ -68,3 +68,10 @@
 - Sequelize models with JSON array fields (otherImage) need explicit array passed to `create()`
 - The model's setter handles serialization, but `create()` needs raw array
 - Pattern: `Model.create({ ..., otherImage: otherImageUrls })` not just `create({ ... })`
+
+## Sequelize raw Mode for API Responses
+
+- When returning Sequelize models in API responses, use `findAll({ raw: true })` to ensure all fields are included
+- This prevents "missing key prop" warnings in React when id field is not serialized
+- Transformation functions must explicitly include id: `return { id: item.id, title: item.title, ... }`
+- Alternative: Use `item.get({ plain: true })` for single instances instead of `toJSON()`

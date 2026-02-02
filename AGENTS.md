@@ -92,3 +92,11 @@
 - Public pages show full data with rich interactions (ImageSlider for gallery)
 - When troubleshooting "missing" data, check if it's intentionally hidden in admin views
 - Example: "Liste des Realisations" in admin only shows banner + name, other images are in public slider
+
+## Next.js 16 Auth & Cookies
+
+- In Next.js 16, `cookies()` from `next/headers` is async - must await before calling `.get()`
+- Pattern: `const session = (await cookies()).get("session")?.value`
+- Custom JWT auth middleware: exclude login page itself from protection while protecting all child routes
+- Pattern: `if (pathname.startsWith("/admin") && pathname !== "/admin") { check auth }`
+- Always use HTTP-only, secure cookies for session tokens
