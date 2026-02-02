@@ -77,8 +77,14 @@ export async function POST(request: Request) {
 
         const name = formData.get("name") as string;
         const description = formData.get("description") as string;
+        const otherImageFiles = formData.getAll("otherImage");
 
         span.setAttribute("prestation.name", name);
+        span.addEvent("files.received", {
+          other_image_count: otherImageFiles.filter(
+            (f): f is File => f instanceof File,
+          ).length,
+        });
 
         let bannerImage = formData.get("bannerImage");
         if (bannerImage instanceof File) {
@@ -96,11 +102,28 @@ export async function POST(request: Request) {
           span.addEvent("upload.completed", { url: bannerImage });
         }
 
+        const otherImageUrls: string[] = [];
+        for (const file of otherImageFiles) {
+          if (file instanceof File) {
+            const buffer = await file.arrayBuffer();
+            const url = await uploadFile(
+              Buffer.from(buffer),
+              `prestations/other/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`,
+            );
+            otherImageUrls.push(url);
+          }
+        }
+
+        span.addEvent("other_images.uploaded", {
+          count: otherImageUrls.length,
+        });
+
         span.addEvent("db.create.started");
         const item = await Prestation.create({
           name,
           description,
           bannerImage,
+          otherImage: otherImageUrls,
         } as any);
 
         span.setAttribute("prestation.id", item.id);

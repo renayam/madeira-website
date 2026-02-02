@@ -19,3 +19,18 @@
 - Track: API request start, response received, state updates with counts/IDs
 - Event names should be self-descriptive: `span.addEvent("state.update.completed", { new_count: ... })`
 - Search transactions by name: `transaction:context.AddPrestation`
+
+## Image Slider Pattern
+
+- For galleries, use ImageSlider component with array of image URLs
+- Pattern: Click on main image → opens slider with all images (banner + otherImage)
+- Handle both array and string formats for otherImage (defensive coding):
+  ```typescript
+  const otherImagesArray = Array.isArray(otherImages)
+    ? otherImages
+    : typeof otherImages === "string"
+      ? otherImages.split(",").filter(Boolean)
+      : [];
+  const allImages = [mainImage, ...otherImagesArray];
+  setSelectedImages(allImages);
+  ```

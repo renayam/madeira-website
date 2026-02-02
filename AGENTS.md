@@ -85,3 +85,10 @@
 - `<img>` works with any URL format including query strings, blob URLs, and proxy URLs
 - The proxy returns correct Content-Type headers, so browser handles rendering naturally
 - Keep `<Image>` for static local assets only (e.g., `/images/logo.png`)
+
+## Admin vs Public UI Design
+
+- Admin panels show summary data (banner + name) for management purposes
+- Public pages show full data with rich interactions (ImageSlider for gallery)
+- When troubleshooting "missing" data, check if it's intentionally hidden in admin views
+- Example: "Liste des Realisations" in admin only shows banner + name, other images are in public slider
