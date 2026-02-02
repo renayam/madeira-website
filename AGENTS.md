@@ -1,0 +1,61 @@
+# Project Learnings
+
+## Database Compatibility
+
+- MariaDB connector 3.x is incompatible with Sequelize 6.x (causes "Cannot delete property 'meta' of [object Array]" error)
+- Always use mariadb@2.5.6 with sequelize@6.x - check package.json before upgrading either
+
+## Testing Strategy
+
+- Testcontainers MariaDB has built-in health checks - never write bash wait scripts
+- Jest doesn't auto-load .env files; tests must call `dotenv.config()` explicitly or use setupFiles
+
+## npm Scripts
+
+- Pre/post hooks referencing missing scripts cause "Missing script" errors (not "script not found")
+- Always provide defaults for env vars in scripts: `"start": "next start -p ${PORT:-3000}"`
+
+## Architecture Insights
+
+- Database singletons with complex lifecycles (ready promises, reset methods) indicate over-engineering
+- If you need bash scripts to test your code, the abstraction is wrong
+
+## Next.js Instrumentation Hook
+
+- `instrumentation.ts` runs in BOTH Node.js AND Edge runtimes
+- Top-level imports in instrumentation.ts get bundled into Edge runtime
+- Edge doesn't have `fs`, `path`, `pg-hstore` - causes "module not found" errors
+- Solution: Use dynamic `await import()` inside `if (NEXT_RUNTIME === "nodejs")` block
+- Database initialization must happen in the Node.js block only
+
+## Sequelize Patterns
+
+- Models must be initialized once using `initModel(sequelize)` before use
+- Export initialized models directly from a single `db.ts` - no singletons needed
+- Database connection/sync should happen once at startup via instrumentation, not per-request
+
+## Next.js Image Component
+
+- External image domains must be configured in `next.config.js` under `images.remotePatterns`
+- Example: `{ protocol: "https", hostname: "xbackbone.madeira.eco" }`
+- Blob URLs (from URL.createObjectURL) don't work with `<Image>` - use `<img>` instead
+- Conditional render: `url.startsWith('http') ? <Image /> : <img />`
+
+## File Upload Flow
+
+- Frontend sends File → Backend uploads to XBackBone → gets URL → stores URL in DB
+- `formData.get("field")` returns File or string - check `instanceof File` before processing
+- Never cast FormData entries directly to string without checking type first
+
+## XBackBone Image Proxy
+
+- Node.js fetch/https modules return HTML (preview page) from XBackBone instead of images - curl works correctly
+- Root cause: TLS/cipher suite compatibility issues between Node.js and certain servers (like nginx with PHP)
+- Solution: Use curl with `encoding: "binary"` and `Buffer.from(body, "binary")` for reliable binary downloads
+- URL encoding in proxy: Always use `encodeURIComponent` for query string values, not just URL construction
+
+## TypeScript Form State Pattern
+
+- When FormData includes both DB fields and File uploads, create separate interface extending DB type
+- Example: `interface PrestationFormState extends PrestationCreate { bannerImageFile: File | null; otherImageFiles: File[]; }`
+- Map callbacks with implicit `any` need explicit `(url: string)` typing to satisfy strict TypeScript

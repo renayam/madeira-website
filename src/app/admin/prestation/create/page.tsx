@@ -3,15 +3,18 @@ import React, { useEffect } from "react";
 import { useState } from "react";
 import Image from "next/image";
 import { usePrestationContext } from "../../../../components/PrestationContext";
-import { Prestation, PrestationCreate } from "@/types/prestation";
+import { Prestation, PrestationFormState } from "@/types/prestation";
 import DragDropImageUpload from "@/components/DragDropImageUpload";
+import * as Sentry from "@sentry/nextjs";
 
 export default function PrestationCreateScreen() {
-  const [pr, setPr] = useState<PrestationCreate>({
+  const [pr, setPr] = useState<PrestationFormState>({
     name: "",
     bannerImage: "",
     otherImage: [],
     description: "",
+    bannerImageFile: null,
+    otherImageFiles: [],
     deletedImages: [],
   });
 
@@ -25,120 +28,267 @@ export default function PrestationCreateScreen() {
 
   const handleBannerImageUpload = (files: File[]) => {
     const file = files[0];
-    if (file) {
-      try {
-        setPr({
-          ...pr,
-          bannerImage: URL.createObjectURL(file),
-          bannerImageFile: file
-        });
-      } catch (error) {
-        console.error("Error uploading banner image:", error);
-        alert("Erreur lors du téléchargement de l'image de bannière");
-      }
-    }
+    if (!file) return;
+
+    Sentry.startSpan(
+      {
+        name: "prestation.create.uploadBanner",
+        op: "file.upload",
+        attributes: {
+          "file.type": "banner",
+          "file.name": file.name,
+          "file.size": file.size,
+          "file.type_mime": file.type,
+        },
+      },
+      async (span) => {
+        try {
+          span.addEvent("upload.started", {
+            file_name: file.name,
+            file_size: file.size,
+            file_type: file.type,
+          });
+
+          setPr({
+            ...pr,
+            bannerImageFile: file,
+          });
+
+          span.addEvent("upload.queued", {
+            file_name: file.name,
+            state: "waiting_for_form_submit",
+          });
+        } catch (error) {
+          span.setStatus({
+            code: 2,
+            message: error instanceof Error ? error.message : "Unknown error",
+          });
+          span.addEvent("upload.failed", {
+            file_name: file.name,
+            error_message:
+              error instanceof Error ? error.message : String(error),
+          });
+          Sentry.captureException(error, {
+            tags: { operation: "banner_upload" },
+          });
+          console.error("Error uploading banner image:", error);
+          alert("Erreur lors du téléchargement de l'image de bannière");
+        }
+      },
+    );
   };
 
   const handleOtherImagesUpload = (files: File[]) => {
-    if (files.length > 0) {
-      try {
-        const otherImageUrls = files.map(file => URL.createObjectURL(file));
-        
-        if (editingPrestation) {
-          const existingUrls = Array.isArray(pr.otherImage) ? pr.otherImage : [];
-          const existingFiles = pr.otherImageFile || [];
-          setPr({
-            ...pr,
-            otherImage: [...existingUrls, ...otherImageUrls],
-            otherImageFile: [...existingFiles, ...files]
+    if (files.length === 0) return;
+
+    Sentry.startSpan(
+      {
+        name: "prestation.create.uploadOtherImages",
+        op: "file.upload",
+        attributes: {
+          "file.type": "gallery",
+          "file.count": files.length,
+          "file.total_size": files.reduce((sum, f) => sum + f.size, 0),
+        },
+      },
+      async (span) => {
+        try {
+          span.addEvent("upload.started", {
+            file_count: files.length,
+            file_names: files.map((f) => f.name).join(", "),
           });
-        } else {
-          setPr({
-            ...pr,
-            otherImage: otherImageUrls,
-            otherImageFile: files
+
+          const otherImageUrls = files.map((file) => URL.createObjectURL(file));
+
+          if (editingPrestation) {
+            const existingUrls = Array.isArray(pr.otherImage)
+              ? pr.otherImage
+              : [];
+            const existingFiles = pr.otherImageFiles || [];
+            setPr({
+              ...pr,
+              otherImage: [...existingUrls, ...otherImageUrls],
+              otherImageFiles: [...existingFiles, ...files],
+            });
+          } else {
+            setPr({
+              ...pr,
+              otherImage: otherImageUrls,
+              otherImageFiles: files,
+            });
+          }
+
+          span.addEvent("upload.queued", {
+            file_count: files.length,
+            editing_mode: !!editingPrestation,
           });
+        } catch (error) {
+          span.setStatus({
+            code: 2,
+            message: error instanceof Error ? error.message : "Unknown error",
+          });
+          span.addEvent("upload.failed", {
+            file_count: files.length,
+            error_message:
+              error instanceof Error ? error.message : String(error),
+          });
+          Sentry.captureException(error, {
+            tags: { operation: "other_images_upload" },
+          });
+          console.error("Error uploading other images:", error);
+          alert("Erreur lors du téléchargement des images");
         }
-      } catch (error) {
-        console.error("Error uploading other images:", error);
-        alert("Erreur lors du téléchargement des images");
-      }
-    }
+      },
+    );
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!pr.name || !pr.description) {
-      alert("Veuillez remplir tous les champs correctement.");
-      return;
-    }
-
-    try {
-      const formData = new FormData();
-      formData.append("name", pr.name);
-      formData.append("description", pr.description);
-
-      // Only append files if they exist
-      if (pr.bannerImageFile instanceof File) {
-        console.log("Appending banner image:", pr.bannerImageFile.name);
-        formData.append("bannerImage", pr.bannerImageFile);
-      }
-
-      // Handle multiple other images
-      if (pr.otherImageFile && Array.isArray(pr.otherImageFile)) {
-        console.log("Appending other images:", pr.otherImageFile.map(f => f.name));
-        pr.otherImageFile.forEach(file => {
-          formData.append("otherImage", file);
-        });
-      }
-
-      if (editingPrestation && editingPrestation.id) {
-        formData.append("id", editingPrestation.id.toString());
-        console.log("Updating prestation...");
-        const updatedPrestation = await updatePrestation(formData);
-
-        if (updatedPrestation) {
-          // After successful update, delete the marked images
-          if (pr.deletedImages && pr.deletedImages.length > 0) {
-            for (const imageUrl of pr.deletedImages) {
-              await removeOtherImage(editingPrestation.id, imageUrl);
-            }
+    await Sentry.startSpan(
+      {
+        name: "prestation.create.submit",
+        op: "http.request",
+        attributes: {
+          "http.method": "POST",
+          "http.url": "/api/prestation",
+          "form.has_banner": !!pr.bannerImageFile,
+          "form.other_image_count": pr.otherImageFiles?.length || 0,
+        },
+      },
+      async (span) => {
+        try {
+          if (!pr.name || !pr.description) {
+            span.addEvent("validation.failed", {
+              has_name: !!pr.name,
+              has_description: !!pr.description,
+            });
+            alert("Veuillez remplir tous les champs correctement.");
+            return;
           }
 
-          console.log("Prestation updated successfully:", updatedPrestation);
-          setEditingPrestation(null);
-          setPr({
-            name: "",
-            bannerImage: "",
-            otherImage: [],
-            description: "",
-            bannerImageFile: null,
-            otherImageFile: null,
-            deletedImages: [],
+          span.addEvent("validation.passed", {
+            has_name: !!pr.name,
+            has_description: !!pr.description,
+            has_banner: !!pr.bannerImageFile,
           });
-        }
-      } else {
-        console.log("Creating new prestation...");
-        const newPrestation = await AddPrestation(formData);
 
-        if (newPrestation) {
-          console.log("Prestation created successfully:", newPrestation);
-          setPr({
-            name: "",
-            bannerImage: "",
-            otherImage: [],
-            description: "",
-            bannerImageFile: null,
-            otherImageFile: null,
-            deletedImages: [],
+          const formData = new FormData();
+          formData.append("name", pr.name);
+          formData.append("description", pr.description);
+
+          if (pr.bannerImageFile instanceof File) {
+            span.addEvent("api.request.banner_attached", {
+              file_name: pr.bannerImageFile.name,
+              file_size: pr.bannerImageFile.size,
+            });
+            formData.append("bannerImage", pr.bannerImageFile);
+          }
+
+          if (pr.otherImageFiles && Array.isArray(pr.otherImageFiles)) {
+            span.addEvent("api.request.other_images_attached", {
+              count: pr.otherImageFiles.length,
+            });
+            pr.otherImageFiles.forEach((file) => {
+              formData.append("otherImage", file);
+            });
+          }
+
+          span.addEvent("api.request.sending", {
+            url: "/api/prestation",
+            method: "POST",
           });
+
+          const response = await fetch("/api/prestation", {
+            method: "POST",
+            body: formData,
+          });
+
+          span.addEvent("api.response.received", {
+            status: response.status,
+            status_text: response.statusText,
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            span.setStatus({
+              code: 2,
+              message: errorData.error || "HTTP error",
+            });
+            span.addEvent("api.response.error", {
+              status: response.status,
+              error: errorData.error,
+            });
+            Sentry.captureMessage("Prestation creation failed", {
+              level: "error",
+              extra: { status: response.status, error: errorData },
+            });
+            return;
+          }
+
+          const newPrestation = await response.json();
+
+          span.addEvent("creation.succeeded", {
+            prestation_id: newPrestation.id,
+            has_banner: !!newPrestation.bannerImage,
+          });
+
+          span.setStatus({ code: 1 });
+
+          if (editingPrestation && editingPrestation.id) {
+            formData.append("id", editingPrestation.id.toString());
+            const updatedPrestation = await updatePrestation(formData);
+
+            if (updatedPrestation) {
+              if (pr.deletedImages && pr.deletedImages.length > 0) {
+                for (const imageUrl of pr.deletedImages) {
+                  await removeOtherImage(editingPrestation.id, imageUrl);
+                }
+              }
+
+              setEditingPrestation(null);
+              setPr({
+                name: "",
+                bannerImage: "",
+                otherImage: [],
+                description: "",
+                bannerImageFile: null,
+                otherImageFiles: [],
+                deletedImages: [],
+              });
+            }
+          } else {
+            const createdPrestation = await AddPrestation(formData);
+
+            if (createdPrestation) {
+              setPr({
+                name: "",
+                bannerImage: "",
+                otherImage: [],
+                description: "",
+                bannerImageFile: null,
+                otherImageFiles: [],
+                deletedImages: [],
+              });
+            }
+          }
+        } catch (error) {
+          span.setStatus({
+            code: 2,
+            message: error instanceof Error ? error.message : "Unknown error",
+          });
+          span.addEvent("submission.error", {
+            error_message:
+              error instanceof Error ? error.message : String(error),
+          });
+          Sentry.captureException(error, {
+            tags: { operation: "prestation_submit" },
+          });
+          console.error("Error creating prestation:", error);
+          alert("Erreur lors de la création de la prestation");
         }
-      }
-    } catch (error) {
-      console.error("Error submitting prestation:", error);
-      alert("Erreur lors de la soumission de la prestation");
-    }
+      },
+    );
   };
 
   // Function to start editing a prestation
@@ -147,10 +297,12 @@ export default function PrestationCreateScreen() {
     setPr({
       name: prestation.name,
       bannerImage: prestation.bannerImage || "",
-      otherImage: Array.isArray(prestation.otherImage) ? prestation.otherImage : [],
+      otherImage: Array.isArray(prestation.otherImage)
+        ? prestation.otherImage
+        : [],
       description: prestation.description,
       bannerImageFile: null,
-      otherImageFile: null,
+      otherImageFiles: [],
       deletedImages: [],
     });
   };
@@ -163,6 +315,8 @@ export default function PrestationCreateScreen() {
       bannerImage: "",
       otherImage: [],
       description: "",
+      bannerImageFile: null,
+      otherImageFiles: [],
       deletedImages: [],
     });
   };
@@ -170,18 +324,20 @@ export default function PrestationCreateScreen() {
   const handleRemoveOtherImage = async (index: number, imageUrl: string) => {
     if (editingPrestation?.id) {
       // Instead of deleting immediately, add to deletedImages array
-      setPr(prev => ({
+      setPr((prev) => ({
         ...prev,
         otherImage: prev.otherImage.filter((_, i) => i !== index),
-        otherImageFile: prev.otherImageFile?.filter((_, i) => i !== index) || null,
-        deletedImages: [...(prev.deletedImages || []), imageUrl]
+        otherImageFiles:
+          prev.otherImageFiles?.filter((_, i) => i !== index) || null,
+        deletedImages: [...(prev.deletedImages || []), imageUrl],
       }));
     } else {
       // For new prestations, just update local state
-      setPr(prev => ({
+      setPr((prev) => ({
         ...prev,
         otherImage: prev.otherImage.filter((_, i) => i !== index),
-        otherImageFile: prev.otherImageFile?.filter((_, i) => i !== index) || null
+        otherImageFiles:
+          prev.otherImageFiles?.filter((_, i) => i !== index) || null,
       }));
     }
   };
@@ -213,7 +369,13 @@ export default function PrestationCreateScreen() {
               label="Image de Bannière :"
               onImageUpload={handleBannerImageUpload}
               images={pr.bannerImage ? [pr.bannerImage] : []}
-              onRemoveImage={() => setPr(prev => ({ ...prev, bannerImage: "", bannerImageFile: null }))}
+              onRemoveImage={() =>
+                setPr((prev) => ({
+                  ...prev,
+                  bannerImage: "",
+                  bannerImageFile: null,
+                }))
+              }
               multiple={false}
             />
 
@@ -270,8 +432,11 @@ export default function PrestationCreateScreen() {
   );
 }
 
-
-function PrestationList({ startEditing }: { startEditing: (prestation: Prestation) => void }) {
+function PrestationList({
+  startEditing,
+}: {
+  startEditing: (prestation: Prestation) => void;
+}) {
   const { prestations, removePrestation, isLoading } = usePrestationContext();
 
   useEffect(() => {
@@ -292,22 +457,35 @@ function PrestationList({ startEditing }: { startEditing: (prestation: Prestatio
         <p className="text-gray-400">Aucune realisation créée</p>
       ) : (
         <>
-          {prestations.map((prestation) => (
-            prestation && (
+          {prestations.map((prestation) => {
+            if (!prestation?.id) {
+              console.warn("Prestation missing ID:", prestation);
+              return null;
+            }
+            return (
               <div
                 key={prestation.id}
-                className="flex items-center justify-between rounded-lg bg-gray-800 p-4 space-y-4"
+                className="flex items-center justify-between space-y-4 rounded-lg bg-gray-800 p-4"
               >
                 <div className="flex items-center space-x-4">
-                  {prestation?.bannerImage && (
-                    <Image
-                      src={prestation.bannerImage}
-                      alt={prestation.name}
-                      width={50}
-                      height={50}
-                      className="rounded-md object-cover"
-                    />
-                  )}
+                  {prestation?.bannerImage &&
+                    (prestation.bannerImage.startsWith("http") ? (
+                      <Image
+                        src={prestation.bannerImage}
+                        alt={prestation.name}
+                        width={50}
+                        height={50}
+                        className="rounded-md object-cover"
+                      />
+                    ) : (
+                      <img
+                        src={prestation.bannerImage}
+                        alt={prestation.name}
+                        width={50}
+                        height={50}
+                        className="rounded-md object-cover"
+                      />
+                    ))}
                   <div>
                     <h3 className="font-semibold text-white">
                       {prestation.name}
@@ -329,7 +507,8 @@ function PrestationList({ startEditing }: { startEditing: (prestation: Prestatio
                   </button>
                 </div>
               </div>
-            )))}
+            );
+          })}
         </>
       )}
     </>

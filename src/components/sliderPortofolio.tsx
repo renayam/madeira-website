@@ -9,6 +9,7 @@ import "swiper/css/pagination";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { usePortfolio } from "./PortfolioContext";
+import { getProxiedImageUrl } from "@/lib/image-proxy";
 
 export default function SliderPortofolio() {
   const { portfolioItems } = usePortfolio();
@@ -31,7 +32,7 @@ export default function SliderPortofolio() {
           {portfolioItems.map((item, index) => (
             <SwiperSlide key={item.id} className="relative">
               <Image
-                src={item.mainImage}
+                src={getProxiedImageUrl(item.mainImage)}
                 alt={item.altText}
                 fill
                 className="object-cover"

@@ -32,5 +32,40 @@ services:
       timeout: 5s
       retries: 5
 
+  mariadb-test:
+    image: mariadb:latest
+    container_name: madeira-mariadb-test
+    environment:
+      MARIADB_ROOT_PASSWORD: test_root
+      MARIADB_DATABASE: test_madeira
+      MARIADB_USER: test_user
+      MARIADB_PASSWORD: test_pass
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+    ports:
+      - "3307:3306"
+    tmpfs:
+      - /var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mariadb-admin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-ptest_root",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   mariadb_data:

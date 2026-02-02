@@ -1,6 +1,7 @@
 "use client";
-import React, { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
+import React, { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
+import { getProxiedImageUrl } from "@/lib/image-proxy";
 
 interface ImageSliderProps {
   images: string[];
@@ -22,48 +23,54 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
    * Advances to the next image in the slider
    * @param {React.MouseEvent} [e] - Optional mouse event
    */
-  const goToNext = useCallback((e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    const nextIndex = (currentIndex + 1) % images.length;
-    console.log('Going to next image:', nextIndex);
-    setCurrentIndex(nextIndex);
-  }, [currentIndex, images.length]);
+  const goToNext = useCallback(
+    (e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      const nextIndex = (currentIndex + 1) % images.length;
+      console.log("Going to next image:", nextIndex);
+      setCurrentIndex(nextIndex);
+    },
+    [currentIndex, images.length],
+  );
 
   /**
    * Goes to the previous image in the slider
    * @param {React.MouseEvent} [e] - Optional mouse event
    */
-  const goToPrevious = useCallback((e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    const prevIndex = (currentIndex - 1 + images.length) % images.length;
-    console.log('Going to previous image:', prevIndex);
-    setCurrentIndex(prevIndex);
-  }, [currentIndex, images.length]);
+  const goToPrevious = useCallback(
+    (e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      const prevIndex = (currentIndex - 1 + images.length) % images.length;
+      console.log("Going to previous image:", prevIndex);
+      setCurrentIndex(prevIndex);
+    },
+    [currentIndex, images.length],
+  );
 
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
         goToNext();
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
         goToPrevious();
-      } else if (e.key === 'Escape') {
+      } else if (e.key === "Escape") {
         onClose();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [goToNext, goToPrevious, onClose]);
 
   // Reset index when images change
   useEffect(() => {
     setCurrentIndex(0);
-    console.log('ImageSlider mounted with images:', images);
+    console.log("ImageSlider mounted with images:", images);
   }, [images]);
 
   useEffect(() => {
-    console.log('Current image index changed to:', currentIndex);
+    console.log("Current image index changed to:", currentIndex);
   }, [currentIndex]);
 
   /**
@@ -71,10 +78,10 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
    * @param {React.MouseEvent} e - Mouse event
    * @param {'next' | 'prev'} action - Navigation direction
    */
-  const handleButtonClick = (e: React.MouseEvent, action: 'next' | 'prev') => {
+  const handleButtonClick = (e: React.MouseEvent, action: "next" | "prev") => {
     e.preventDefault();
     e.stopPropagation();
-    if (action === 'next') {
+    if (action === "next") {
       goToNext();
     } else {
       goToPrevious();
@@ -92,7 +99,7 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
 
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    
+
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
@@ -108,12 +115,12 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 touch-none cursor-pointer" 
+    <div
+      className="fixed inset-0 z-50 flex cursor-pointer touch-none items-center justify-center bg-black/90"
       onClick={onClose}
     >
-      <div 
-        className="relative w-full h-full md:w-auto md:h-auto cursor-default"
+      <div
+        className="relative h-full w-full cursor-default md:h-auto md:w-auto"
         onClick={(e) => e.stopPropagation()}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -121,9 +128,7 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
       >
         {/* Close button */}
         <button
-          className="absolute right-4 top-4 z-50 p-3 text-3xl text-white hover:text-red-200 transition-colors duration-200 
-                     bg-red-500 hover:bg-red-600 rounded-full w-12 h-12 flex items-center justify-center
-                     md:right-4 md:top-4 shadow-lg"
+          className="absolute right-4 top-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-red-500 p-3 text-3xl text-white shadow-lg transition-colors duration-200 hover:bg-red-600 hover:text-red-200 md:right-4 md:top-4"
           onClick={onClose}
           aria-label="Close"
         >
@@ -134,21 +139,15 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
         {images.length > 1 && (
           <>
             <button
-              className="hidden md:flex absolute left-4 top-1/2 z-50 -translate-y-1/2 
-                         rounded-full bg-blue-500 hover:bg-blue-600 p-6 
-                         text-white text-3xl hover:text-white/90 transition-all duration-200
-                         items-center justify-center w-16 h-16 shadow-lg"
-              onClick={(e) => handleButtonClick(e, 'prev')}
+              className="absolute left-4 top-1/2 z-50 hidden h-16 w-16 -translate-y-1/2 items-center justify-center rounded-full bg-blue-500 p-6 text-3xl text-white shadow-lg transition-all duration-200 hover:bg-blue-600 hover:text-white/90 md:flex"
+              onClick={(e) => handleButtonClick(e, "prev")}
               aria-label="Previous image"
             >
               ←
             </button>
             <button
-              className="hidden md:flex absolute right-4 top-1/2 z-50 -translate-y-1/2 
-                         rounded-full bg-blue-500 hover:bg-blue-600 p-6 
-                         text-white text-3xl hover:text-white/90 transition-all duration-200
-                         items-center justify-center w-16 h-16 shadow-lg"
-              onClick={(e) => handleButtonClick(e, 'next')}
+              className="absolute right-4 top-1/2 z-50 hidden h-16 w-16 -translate-y-1/2 items-center justify-center rounded-full bg-blue-500 p-6 text-3xl text-white shadow-lg transition-all duration-200 hover:bg-blue-600 hover:text-white/90 md:flex"
+              onClick={(e) => handleButtonClick(e, "next")}
               aria-label="Next image"
             >
               →
@@ -157,10 +156,10 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
         )}
 
         {/* Image container */}
-        <div className="relative h-screen w-screen md:h-[80vh] md:w-[90vw] max-w-7xl mx-auto">
+        <div className="relative mx-auto h-screen w-screen max-w-7xl md:h-[80vh] md:w-[90vw]">
           <Image
             key={currentIndex}
-            src={images[currentIndex]}
+            src={getProxiedImageUrl(images[currentIndex])}
             alt={`Image ${currentIndex + 1}`}
             fill
             className="object-contain"
@@ -171,16 +170,13 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
         </div>
 
         {/* Image counter */}
-        <div className="absolute bottom-4 left-1/2 z-50 -translate-x-1/2 
-                       rounded-full bg-black/50 px-6 py-3 
-                       text-base md:text-lg text-white font-medium">
+        <div className="absolute bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full bg-black/50 px-6 py-3 text-base font-medium text-white md:text-lg">
           {currentIndex + 1} / {images.length}
         </div>
 
         {/* Swipe indicator - only shown on mobile */}
         {images.length > 1 && (
-          <div className="absolute bottom-16 left-1/2 z-50 -translate-x-1/2 
-                         text-white text-sm bg-black/50 px-4 py-2 rounded-full md:hidden">
+          <div className="absolute bottom-16 left-1/2 z-50 -translate-x-1/2 rounded-full bg-black/50 px-4 py-2 text-sm text-white md:hidden">
             Swipe left or right to navigate
           </div>
         )}
@@ -189,4 +185,4 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
   );
 };
 
-export default ImageSlider; 
+export default ImageSlider;
