@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
@@ -31,13 +30,10 @@ export default function SliderPortofolio() {
         >
           {portfolioItems.map((item, index) => (
             <SwiperSlide key={item.id} className="relative">
-              <Image
+              <img
                 src={getProxiedImageUrl(item.mainImage)}
                 alt={item.altText}
-                fill
-                className="object-cover"
-                priority={index === 0}
-                sizes="(max-width: 1536px) 100vw, 1536px"
+                className="h-full w-full object-cover"
               />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
                 <h2 className="text-2xl font-semibold text-white">

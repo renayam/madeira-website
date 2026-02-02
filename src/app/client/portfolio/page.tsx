@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import Image from "next/image";
 import { usePortfolio } from "@/components/PortfolioContext";
 import SliderPortofolio from "@/components/sliderPortofolio";
 import ImageSlider from "@/components/ImageSlider";
@@ -55,15 +54,13 @@ const ServiceList: React.FC = () => {
                 </h3>
               </div>
               <div className="relative aspect-[4/3] w-full overflow-hidden">
-                <Image
+                <img
                   src={item.mainImage}
                   alt={item.altText}
-                  layout="fill"
-                  objectFit="cover"
                   onClick={() =>
                     handleImageClick(item.mainImage, item.otherImage)
                   }
-                  className="cursor-pointer transition-all duration-500 group-hover:scale-105 group-hover:brightness-110"
+                  className="aspect-[4/3] w-full cursor-pointer object-cover transition-all duration-500 group-hover:scale-105 group-hover:brightness-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
               </div>

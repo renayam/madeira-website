@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import React, { useState } from "react";
 import { usePortfolio } from "@/components/PortfolioContext";
 import { PortfolioItem } from "@/types/portfolio";
@@ -27,7 +26,8 @@ const ManagePortfolio: React.FC = () => {
     otherImageFile: null,
     deletedImages: [],
   });
-  const [editingPortfolio, setEditingPortfolio] = useState<PortfolioItem | null>(null);
+  const [editingPortfolio, setEditingPortfolio] =
+    useState<PortfolioItem | null>(null);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,21 +46,23 @@ const ManagePortfolio: React.FC = () => {
   const handleOtherImagesUpload = (files: File[]) => {
     if (files.length > 0) {
       try {
-        const otherImageUrls = files.map(file => URL.createObjectURL(file));
-        
+        const otherImageUrls = files.map((file) => URL.createObjectURL(file));
+
         if (editingPortfolio) {
-          const existingUrls = Array.isArray(data.otherImage) ? data.otherImage : [];
+          const existingUrls = Array.isArray(data.otherImage)
+            ? data.otherImage
+            : [];
           const existingFiles = data.otherImageFile || [];
           setData({
             ...data,
             otherImage: [...existingUrls, ...otherImageUrls],
-            otherImageFile: [...existingFiles, ...files]
+            otherImageFile: [...existingFiles, ...files],
           });
         } else {
           setData({
             ...data,
             otherImage: otherImageUrls,
-            otherImageFile: files
+            otherImageFile: files,
           });
         }
       } catch (error) {
@@ -75,17 +77,19 @@ const ManagePortfolio: React.FC = () => {
 
   const handleRemoveOtherImage = (index: number, imageUrl: string) => {
     if (editingPortfolio?.id) {
-      setData(prev => ({
+      setData((prev) => ({
         ...prev,
         otherImage: prev.otherImage.filter((_, i) => i !== index),
-        otherImageFile: prev.otherImageFile?.filter((_, i) => i !== index) || null,
-        deletedImages: [...(prev.deletedImages || []), imageUrl]
+        otherImageFile:
+          prev.otherImageFile?.filter((_, i) => i !== index) || null,
+        deletedImages: [...(prev.deletedImages || []), imageUrl],
       }));
     } else {
-      setData(prev => ({
+      setData((prev) => ({
         ...prev,
         otherImage: prev.otherImage.filter((_, i) => i !== index),
-        otherImageFile: prev.otherImageFile?.filter((_, i) => i !== index) || null
+        otherImageFile:
+          prev.otherImageFile?.filter((_, i) => i !== index) || null,
       }));
     }
   };
@@ -94,32 +98,32 @@ const ManagePortfolio: React.FC = () => {
     event.preventDefault();
     setIsLoading(true);
     setError(null);
-    
+
     const formData = new FormData();
-    
+
     // Add basic fields
     formData.append("title", data.title);
     formData.append("description", data.description);
-    
+
     // Add main image if exists
     if (data.mainImageFile) {
       formData.append("mainImage", data.mainImageFile);
     }
-    
+
     // Add other images if they exist
     if (data.otherImageFile) {
       data.otherImageFile.forEach((file) => {
         formData.append("otherImage", file);
       });
     }
-    
+
     // Add deleted images if in edit mode
     if (editingPortfolio && data.deletedImages.length > 0) {
       data.deletedImages.forEach((imageUrl) => {
         formData.append("deletedImages", imageUrl);
       });
     }
-    
+
     try {
       let result;
       if (editingPortfolio && editingPortfolio.id) {
@@ -148,7 +152,9 @@ const ManagePortfolio: React.FC = () => {
       }
       router.refresh();
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Failed to submit form");
+      setError(
+        error instanceof Error ? error.message : "Failed to submit form",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -160,7 +166,9 @@ const ManagePortfolio: React.FC = () => {
       title: portfolio.title,
       description: portfolio.description,
       mainImage: portfolio.mainImage,
-      otherImage: Array.isArray(portfolio.otherImage) ? portfolio.otherImage : [],
+      otherImage: Array.isArray(portfolio.otherImage)
+        ? portfolio.otherImage
+        : [],
       mainImageFile: null,
       otherImageFile: null,
       deletedImages: [],
@@ -184,12 +192,12 @@ const ManagePortfolio: React.FC = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex gap-8">
         <div className="w-2/3">
-          <h1 className="text-2xl font-bold mb-6">
+          <h1 className="mb-6 text-2xl font-bold">
             {editingPortfolio ? "Modifier le Portfolio" : "Créer un Portfolio"}
           </h1>
 
           {error && (
-            <div className="mb-4 p-4 text-red-700 bg-red-100 rounded-md">
+            <div className="mb-4 rounded-md bg-red-100 p-4 text-red-700">
               {error}
             </div>
           )}
@@ -246,11 +254,15 @@ const ManagePortfolio: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                className={`w-full rounded-md border border-transparent bg-blue-600 px-4 py-2 text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  isLoading ? "cursor-not-allowed opacity-50" : ""
                 }`}
               >
-                {isLoading ? 'Chargement...' : editingPortfolio ? 'Mettre à jour' : 'Créer un Portfolio'}
+                {isLoading
+                  ? "Chargement..."
+                  : editingPortfolio
+                    ? "Mettre à jour"
+                    : "Créer un Portfolio"}
               </button>
               {editingPortfolio && (
                 <button
@@ -270,7 +282,11 @@ const ManagePortfolio: React.FC = () => {
   );
 };
 
-const PortfolioList = ({ onEdit }: { onEdit: (portfolio: PortfolioItem) => void }) => {
+const PortfolioList = ({
+  onEdit,
+}: {
+  onEdit: (portfolio: PortfolioItem) => void;
+}) => {
   const { portfolioItems } = usePortfolio();
 
   if (portfolioItems.length === 0) {
@@ -292,52 +308,56 @@ const PortfolioList = ({ onEdit }: { onEdit: (portfolio: PortfolioItem) => void 
   );
 };
 
-function ViewPortfolio({ item, onEdit }: { item: PortfolioItem; onEdit: (portfolio: PortfolioItem) => void }) {
+function ViewPortfolio({
+  item,
+  onEdit,
+}: {
+  item: PortfolioItem;
+  onEdit: (portfolio: PortfolioItem) => void;
+}) {
   const { deletePortfolioItem } = usePortfolio();
 
-  if (!item || typeof item.id !== 'number') return null;
+  if (!item || typeof item.id !== "number") return null;
 
   return (
-    <div className="mb-4 rounded-lg bg-gray-900 shadow-md overflow-hidden">
+    <div className="mb-4 overflow-hidden rounded-lg bg-gray-900 shadow-md">
       <div className="p-3 sm:p-4">
-        <h3 className="mb-3 text-base sm:text-lg font-semibold text-white">{item.title}</h3>
+        <h3 className="mb-3 text-base font-semibold text-white sm:text-lg">
+          {item.title}
+        </h3>
         <div className="relative mb-3">
-          <Image
+          <img
             src={item.mainImage}
             alt={item.title}
-            width={300}
-            height={200}
-            className="w-full cursor-pointer rounded-md object-cover aspect-video"
+            className="aspect-video max-h-[200px] w-full cursor-pointer rounded-md object-cover"
           />
         </div>
         {Array.isArray(item.otherImage) && item.otherImage.length > 0 && (
           <div className="mb-3 grid grid-cols-3 gap-2">
             {item.otherImage.map((imageUrl, index) => (
               <div key={index} className="relative aspect-square">
-                <Image
+                <img
                   src={imageUrl}
                   alt={`${item.title} - Image ${index + 1}`}
-                  layout="fill"
-                  objectFit="cover"
-                  className="cursor-pointer rounded-md"
+                  className="aspect-square w-full cursor-pointer rounded-md object-cover"
                 />
               </div>
             ))}
           </div>
         )}
-        <p className="mb-3 text-xs sm:text-sm text-gray-400">
+        <p className="mb-3 text-xs text-gray-400 sm:text-sm">
           {item.description}
         </p>
         <div className="flex items-center justify-between">
           <button
             onClick={() => onEdit(item)}
-            className="text-blue-500 transition hover:text-blue-700 p-2"
+            className="p-2 text-blue-500 transition hover:text-blue-700"
           >
             ✏️
           </button>
           <button
             onClick={() => deletePortfolioItem(item.id)}
-            className="text-xs sm:text-sm text-red-500 hover:text-red-600 transition-colors p-2"
+            className="p-2 text-xs text-red-500 transition-colors hover:text-red-600 sm:text-sm"
           >
             Supprimer
           </button>

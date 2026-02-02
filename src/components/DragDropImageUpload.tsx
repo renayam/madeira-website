@@ -1,5 +1,4 @@
 import React, { useCallback, useState } from "react";
-import Image from "next/image";
 
 interface DragDropImageUploadProps {
   onImageUpload: (files: File[]) => void;
@@ -220,12 +219,10 @@ const DragDropImageUpload: React.FC<DragDropImageUploadProps> = ({
         >
           {images.map((imageUrl, index) => (
             <div key={index} className="relative">
-              <Image
+              <img
                 src={imageUrl}
                 alt={`Image Preview ${index + 1}`}
-                width={200}
-                height={200}
-                className="rounded-md object-cover"
+                className="h-[200px] w-[200px] rounded-md object-cover"
               />
               {onRemoveImage && (
                 <button

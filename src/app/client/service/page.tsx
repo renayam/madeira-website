@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import React from "react";
 import { motion } from "framer-motion";
 
@@ -31,19 +30,19 @@ const ServiceList: React.FC = () => {
   ];
 
   return (
-    <div className="container mx-auto bg-primary px-4 sm:px-6 py-12 max-w-7xl">
-      <motion.h1 
+    <div className="container mx-auto max-w-7xl bg-primary px-4 py-12 sm:px-6">
+      <motion.h1
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="mb-8 text-center text-3xl sm:text-4xl font-bold text-white tracking-tight"
+        className="mb-8 text-center text-3xl font-bold tracking-tight text-white sm:text-4xl"
       >
         Notre Processus de Travail
       </motion.h1>
 
       <div className="relative py-4 sm:py-8">
         {/* Progress Line */}
-        <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-0.5 bg-white/20" />
+        <div className="absolute bottom-0 left-1/2 top-0 hidden w-0.5 bg-white/20 md:block" />
 
         {steps.map((step, index) => (
           <motion.div
@@ -54,9 +53,9 @@ const ServiceList: React.FC = () => {
             transition={{ duration: 0.6, delay: index * 0.2 }}
             className="mb-16 last:mb-0"
           >
-            <div className="relative flex items-center mb-6">
+            <div className="relative mb-6 flex items-center">
               {/* Progress Number - Now centered and above the content */}
-              <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center justify-center w-12 h-12 rounded-full bg-white text-primary font-bold shadow-lg">
+              <div className="absolute left-1/2 hidden h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full bg-white font-bold text-primary shadow-lg md:flex">
                 {index + 1}
               </div>
             </div>
@@ -66,35 +65,33 @@ const ServiceList: React.FC = () => {
                 index % 2 === 0 ? "md:flex-row-reverse" : "md:flex-row"
               }`}
             >
-              <div className="w-full md:w-1/3 flex justify-center items-center">
-                <motion.div 
-                  className="relative w-full max-w-[320px] aspect-square"
+              <div className="flex w-full items-center justify-center md:w-1/3">
+                <motion.div
+                  className="relative aspect-square w-full max-w-[320px]"
                   whileHover={{ scale: 1.05 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Image
+                  <img
                     src={step.image}
                     alt={`Illustration de ${step.title}`}
-                    fill
-                    className="rounded-xl object-cover shadow-lg"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="aspect-square w-full max-w-[320px] rounded-xl object-cover shadow-lg"
                   />
                 </motion.div>
               </div>
 
               <div
-                className={`w-full md:w-1/2 rounded-xl bg-white p-6 sm:p-8 shadow-lg hover:shadow-xl transition-shadow ${
+                className={`w-full rounded-xl bg-white p-6 shadow-lg transition-shadow hover:shadow-xl sm:p-8 md:w-1/2 ${
                   index % 2 === 0 ? "md:text-right" : "text-left"
                 }`}
               >
-                <h2 className="mb-4 sm:mb-6 text-xl sm:text-2xl font-bold text-primary">
+                <h2 className="mb-4 text-xl font-bold text-primary sm:mb-6 sm:text-2xl">
                   {step.title}
                 </h2>
                 <div className="space-y-3">
                   {step.description.map((desc, descIndex) => (
-                    <p 
-                      key={descIndex} 
-                      className="text-base sm:text-lg text-gray-700 leading-relaxed"
+                    <p
+                      key={descIndex}
+                      className="text-base leading-relaxed text-gray-700 sm:text-lg"
                     >
                       {desc}
                     </p>

@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import { getProxiedImageUrl } from "@/lib/image-proxy";
-import Image from "next/image";
 import { usePrestationContext } from "@/components/PrestationContext";
 import { Prestation } from "@/types/prestation";
 import ImageSlider from "@/components/ImageSlider";
@@ -64,14 +63,12 @@ const PrestationList: React.FC = () => {
                     )
                   }
                 >
-                  <Image
+                  <img
                     src={getProxiedImageUrl(
                       prestation.bannerImage || "/placeholder-image.jpg",
                     )}
                     alt={`Image de ${prestation.name}`}
-                    layout="fill"
-                    objectFit="cover"
-                    className="transition-transform duration-300 hover:scale-105"
+                    className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                   />
                   {prestation.otherImage && (
                     <div className="absolute bottom-2 right-2 flex items-center justify-center rounded-full bg-black/70 px-2 py-1">

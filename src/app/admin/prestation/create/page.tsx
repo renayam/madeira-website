@@ -199,42 +199,6 @@ export default function PrestationCreateScreen() {
             method: "POST",
           });
 
-          const response = await fetch("/api/prestation", {
-            method: "POST",
-            body: formData,
-          });
-
-          span.addEvent("api.response.received", {
-            status: response.status,
-            status_text: response.statusText,
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            span.setStatus({
-              code: 2,
-              message: errorData.error || "HTTP error",
-            });
-            span.addEvent("api.response.error", {
-              status: response.status,
-              error: errorData.error,
-            });
-            Sentry.captureMessage("Prestation creation failed", {
-              level: "error",
-              extra: { status: response.status, error: errorData },
-            });
-            return;
-          }
-
-          const newPrestation = await response.json();
-
-          span.addEvent("creation.succeeded", {
-            prestation_id: newPrestation.id,
-            has_banner: !!newPrestation.bannerImage,
-          });
-
-          span.setStatus({ code: 1 });
-
           if (editingPrestation && editingPrestation.id) {
             formData.append("id", editingPrestation.id.toString());
             const updatedPrestation = await updatePrestation(formData);

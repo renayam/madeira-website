@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
 import { getProxiedImageUrl } from "@/lib/image-proxy";
 
 interface ImageSliderProps {
@@ -157,15 +156,11 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, onClose }) => {
 
         {/* Image container */}
         <div className="relative mx-auto h-screen w-screen max-w-7xl md:h-[80vh] md:w-[90vw]">
-          <Image
+          <img
             key={currentIndex}
             src={getProxiedImageUrl(images[currentIndex])}
             alt={`Image ${currentIndex + 1}`}
-            fill
-            className="object-contain"
-            priority
-            sizes="(max-width: 768px) 100vw, 90vw"
-            quality={90}
+            className="h-full w-full object-contain"
           />
         </div>
 

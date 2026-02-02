@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect } from "react";
-import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
@@ -19,7 +18,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center ">
+    <div className="flex min-h-screen flex-col items-center justify-center">
       <div className="w-full max-w-6xl px-4 py-8">
         <Swiper
           loop
@@ -36,15 +35,12 @@ export default function Home() {
         >
           {portfolioItems.map((item, index) => (
             <SwiperSlide key={item.id} className="relative">
-              <Image
+              <img
                 src={item.mainImage}
                 alt={item.altText}
-                fill
-                className="object-cover"
-                priority={index === 0}
-                sizes="(max-width: 1536px) 100vw, 1536px"
+                className="h-full w-full object-cover"
               />
-              <div className="absolute bottom-0 left-0 right-0  from-black/70 to-transparent p-6">
+              <div className="absolute bottom-0 left-0 right-0 from-black/70 to-transparent p-6">
                 <h2 className="text-2xl font-semibold text-white">
                   {item.title}
                 </h2>
@@ -65,7 +61,7 @@ export default function Home() {
         >
           <Link
             href="/client/portfolio"
-            className="rounded-full  px-6 py-3 text-white shadow-lg transition-colors duration-300 "
+            className="rounded-full px-6 py-3 text-white shadow-lg transition-colors duration-300"
           >
             Découvrir nos services
           </Link>

@@ -83,10 +83,26 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
           span.addEvent("api.response.success", {
             prestation_id: newPrestation.id,
             has_banner: !!newPrestation.bannerImage,
+            name: newPrestation.name,
+            otherImage: JSON.stringify(newPrestation.otherImage)?.substring(
+              0,
+              100,
+            ),
           });
 
-          span.setStatus({ code: 1 }); // OK
-          setPrestations((prev) => [...prev, newPrestation]);
+          span.setStatus({ code: 1 });
+          span.addEvent("state.update.started", {
+            previous_count: prestations.length,
+          });
+
+          setPrestations((prev) => {
+            const newState = [...prev, newPrestation];
+            span.addEvent("state.update.completed", {
+              new_count: newState.length,
+              all_ids: newState.map((p) => p.id),
+            });
+            return newState;
+          });
           return newPrestation;
         } catch (error) {
           span.setStatus({
@@ -243,20 +259,55 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
 
       try {
         setIsLoading(true);
-        const response = await fetch("/api/prestation", {
-          signal: controller.signal,
-        });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        await Sentry.startSpan(
+          {
+            name: "prestation.context.fetchPrestations",
+            op: "http.request",
+            attributes: {
+              "http.method": "GET",
+              "http.url": "/api/prestation",
+            },
+          },
+          async (span) => {
+            try {
+              span.addEvent("fetch.started", {
+                current_isLoading: true,
+              });
 
-        const data: Prestation[] = await response.json();
-        setPrestations(data);
-      } catch (error) {
-        if (error instanceof Error && error.name !== "AbortError") {
-          console.error("Error fetching prestations:", error.message);
-        }
+              const response = await fetch("/api/prestation", {
+                signal: controller.signal,
+              });
+
+              span.addEvent("api.response.received", {
+                status: response.status,
+              });
+
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+
+              const data: Prestation[] = await response.json();
+              span.addEvent("api.data.parsed", {
+                items_count: data.length,
+                first_item_id: data[0]?.id,
+                all_ids: data.map((d) => d.id),
+              });
+
+              setPrestations(data);
+              span.addEvent("state.updated", {
+                count: data.length,
+              });
+            } catch (error) {
+              if (error instanceof Error && error.name !== "AbortError") {
+                console.error("Error fetching prestations:", error.message);
+                span.addEvent("fetch.error", {
+                  error: error.message,
+                });
+              }
+            }
+          },
+        );
       } finally {
         setIsLoading(false);
       }
@@ -265,7 +316,7 @@ export const PrestationProvider: React.FC<{ children: ReactNode }> = ({
     };
 
     fetchPrestations();
-  }, []); // Removed isLoading dependency to prevent infinite loop
+  }, []);
 
   const contextValue = {
     prestations,

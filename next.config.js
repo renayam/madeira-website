@@ -29,18 +29,21 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "http",
-        hostname: "localhost",
-        port: "3000",
-        pathname: "/api/**",
+        protocol: "https",
+        hostname: "xbackbone.madeira.eco",
       },
       {
         protocol: "https",
         hostname: "s3.fr-par.scw.cloud",
       },
+    ],
+    localPatterns: [
       {
-        protocol: "https",
-        hostname: "xbackbone.madeira.eco",
+        pathname: "/api/proxy-image",
+        search: "url=*",
+      },
+      {
+        pathname: "/images/**",
       },
     ],
   },
