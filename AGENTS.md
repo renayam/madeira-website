@@ -41,6 +41,19 @@
 - Blob URLs (from URL.createObjectURL) don't work with `<Image>` - use `<img>` instead
 - Conditional render: `url.startsWith('http') ? <Image /> : <img />`
 
+## Next.js 16+ Image Configuration
+
+- Next.js 16.1.1 requires `localPatterns` for URLs with query strings like `/api/proxy-image?url=...`
+- Static images like `/images/logo.png` also need `localPatterns` configuration
+- Config format:
+  ```javascript
+  localPatterns: [
+    { pathname: "/api/proxy-image", search: "url=*" },
+    { pathname: "/images/**" },
+  ];
+  ```
+- Clear Turbopack cache after config changes: `rm -rf .next/cache`
+
 ## File Upload Flow
 
 - Frontend sends File → Backend uploads to XBackBone → gets URL → stores URL in DB
@@ -59,3 +72,16 @@
 - When FormData includes both DB fields and File uploads, create separate interface extending DB type
 - Example: `interface PrestationFormState extends PrestationCreate { bannerImageFile: File | null; otherImageFiles: File[]; }`
 - Map callbacks with implicit `any` need explicit `(url: string)` typing to satisfy strict TypeScript
+
+## Frontend-Context API Pattern
+
+- When using context's AddPrestation/UpdatePrestation functions, do NOT make explicit fetch calls
+- Context functions handle both API call AND state update - double calls cause race conditions
+- Pattern: Call `AddPrestation(formData)` directly, not `fetch()` + `AddPrestation()`
+
+## Image Tag Strategy
+
+- For proxied images (proxy returns raw binary), use `<img>` instead of `<Image>` to bypass Next.js configuration
+- `<img>` works with any URL format including query strings, blob URLs, and proxy URLs
+- The proxy returns correct Content-Type headers, so browser handles rendering naturally
+- Keep `<Image>` for static local assets only (e.g., `/images/logo.png`)
